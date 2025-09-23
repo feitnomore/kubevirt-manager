@@ -377,6 +377,8 @@ spec:
             mountPath: /var/cache/nginx
           - name: run-volume
             mountPath: /var/run
+          - name: oauth-config
+            mountPath: /etc/nginx/oauth.d/
           - name: auth-config
             mountPath: /etc/nginx/auth.d/
           - name: auth-secret
@@ -390,6 +392,10 @@ spec:
           emptyDir: {}
         - name: run-volume
           emptyDir: {}
+        - name: oauth-config
+          configMap:
+            name: oauth-config
+            optional: true
         - name: auth-config
           configMap:
             name: auth-config
