@@ -5,12 +5,12 @@ metadata:
   namespace: kubevirt-manager
   labels:
     app: kubevirt-manager
-    kubevirt-manager.io/version: 1.5.2
+    kubevirt-manager.io/version: nightly
 spec:
   selector:
     matchLabels:
       app: kubevirt-manager
-      kubevirt-manager.io/version: 1.5.2
+      kubevirt-manager.io/version: nightly
   replicas: 1
   strategy:
     type: Recreate
@@ -18,11 +18,11 @@ spec:
     metadata:
       labels:
         app: kubevirt-manager
-        kubevirt-manager.io/version: 1.5.2
+        kubevirt-manager.io/version: nightly
     spec:
       containers:
         - name: kubevirtmgr
-          image: kubevirtmanager/kubevirt-manager:1.5.2
+          image: kubevirtmanager/kubevirt-manager:nightly
           imagePullPolicy: IfNotPresent
           ports:
           - name: http

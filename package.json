@@ -1,6 +1,6 @@
 {
   "name": "kubevirtmgr-webui",
-  "version": "1.5.2",
+  "version": "nightly",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",

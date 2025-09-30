@@ -1,7 +1,21 @@
+# Copyright 2025 Marcelo Parisi (github.com/feitnomore)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # Node/Angular Builder
 FROM node:22.5.1-bookworm as builder
 LABEL org.opencontainers.image.authors="marcelo@feitoza.com.br"
-LABEL description="Kubevirt Manager 1.5.2 - Builder"
+LABEL description="Kubevirt Manager nightly - Builder"
 
 WORKDIR /usr/src/app
 COPY . /usr/src/app
@@ -15,7 +29,7 @@ FROM quay.io/oauth2-proxy/oauth2-proxy:latest AS oauth2_proxy_downloader
 FROM nginx:1.28-alpine
 
 LABEL org.opencontainers.image.authors="marcelo@feitoza.com.br"
-LABEL description="Kubevirt Manager 1.5.2"
+LABEL description="Kubevirt Manager nightly"
 
 COPY --from=oauth2_proxy_downloader /bin/oauth2-proxy /bin/oauth2-proxy
 COPY --from=oauth2_proxy_downloader /etc/ssl/private/jwt_signing_key.pem /etc/ssl/private/jwt_signing_key.pem
