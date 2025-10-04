@@ -27,6 +27,22 @@ export class K8sApisService {
         return this.http.get(`${baseUrl}/k8s.cni.cncf.io/v1/namespaces/${namespace}/network-attachment-definitions/${name}`);
     }
 
+    getNetworkPolicies(): Observable<any> {
+        return this.http.get(`${baseUrl}/networking.k8s.io/v1/networkpolicies`);
+    }
+
+    getNetworkPolicy(namespace: string, name: string): Observable<any> {
+        return this.http.get(`${baseUrl}/networking.k8s.io/v1/namespaces/${namespace}/networkpolicies/${name}`);
+    }
+
+    getMultiNetworkPolicies(): Observable<any> {
+        return this.http.get(`${baseUrl}/k8s.cni.cncf.io/v1beta1/multi-networkpolicies`);
+    }
+
+    getMultiNetworkPolicy(namespace: string, name: string): Observable<any> {
+        return this.http.get(`${baseUrl}/k8s.cni.cncf.io/v1beta1/namespaces/${namespace}/multi-networkpolicies/${name}`);
+    }
+
     getStorageClasses(): Observable<any> {
         return this.http.get(`${baseUrl}/storage.k8s.io/v1/storageclasses`);
     }

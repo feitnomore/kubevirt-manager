@@ -532,20 +532,20 @@ export class LoadBalancersComponent implements OnInit {
                     ["kubevirt.io/vmpool"]: newlbtargetresource
                 };
                 Object.assign(tmpLabels, vmPoolLabel);
-                Object.assign(thisSelector, tmpLabels);
+                Object.assign(thisSelector, vmPoolLabel);
             } else if(newlbtargetresourcetype == "vminstance") {
                 let vmInstanceLabel = {
                     ["kubevirt.io/domain"]: newlbtargetresource
                 };
                 Object.assign(tmpLabels, vmInstanceLabel);
-                Object.assign(thisSelector, tmpLabels);
+                Object.assign(thisSelector, vmInstanceLabel);
             } else if(newlbtargetresourcetype == "capk") {
                 let thisSelector = {};
-                let vmInstanceLabel = {
+                let vmClusterLabel = {
                     ["cluster.x-k8s.io/cluster-name"]: newlbtargetresource
                 };
-                Object.assign(tmpLabels, vmInstanceLabel);
-                Object.assign(thisSelector, tmpLabels);
+                Object.assign(tmpLabels, vmClusterLabel);
+                Object.assign(thisSelector, vmClusterLabel);
             }
 
             let kubevirtManagerLabel = {

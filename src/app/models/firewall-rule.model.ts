@@ -5,6 +5,7 @@ export class FirewallRule {
     name:               string = "";
     namespace:          string = "";
     type:               string = "";   // INGRESS / EGRESS
+    network:            string = "";   // podNetwork / etc...
     target:     FirewallTarget = new FirewallTarget;
     filter:     FirewallFilter = new FirewallFilter;
 }
