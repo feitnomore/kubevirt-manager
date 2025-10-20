@@ -8,7 +8,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test --watch=false",
     "test-coverage": "ng test --code-coverage --watch=false",
-    "clean": "rm -rf node_modules && rm -rf .angular && rm -rf dist && rm -rf coverage"
+    "clean": "rm -rf node_modules && rm -rf .angular && rm -rf dist && rm -rf coverage && rm -rf ./src/assets/noVNC"
   },
   "private": true,
   "dependencies": {
