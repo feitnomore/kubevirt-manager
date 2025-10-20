@@ -451,6 +451,7 @@
                                                 <label for="newvm-netname-{{j}}">Network:</label>
                                                 <select style="min-width: 300px;" class="custom-select rounded-0" name="newvm-netname-{{j}}" id="networkName-{{j}}" formControlName="networkName" (change)="onChangeNetwork(j)">
                                                     <option value="" selected></option>
+                                                    <option value=podNetwork>podNetwork</option>
                                                 </select>
                                             </div>
                                             <div class="col-1">&nbsp;</div>
