@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Node/Angular Builder
-FROM node:22.5.1-bookworm as builder
+FROM docker.io/node:22.5.1-bookworm as builder
 LABEL org.opencontainers.image.authors="marcelo@feitoza.com.br"
 LABEL description="Kubevirt Manager nightly - Builder"
 
@@ -26,7 +26,7 @@ RUN cd /usr/src/app && npm install -g npm@10.8.2 && npm run clean && npm install
 FROM quay.io/oauth2-proxy/oauth2-proxy:latest AS oauth2_proxy_downloader
 
 # NGINX Image
-FROM kubevirtmanager/kvm-nginx:nightly
+FROM docker.io/kubevirtmanager/kvm-nginx:nightly
 LABEL org.opencontainers.image.authors="marcelo@feitoza.com.br"
 LABEL description="Kubevirt Manager nightly"
 
