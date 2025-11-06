@@ -12,7 +12,7 @@
               <button type="button" data-placement="bottom" data-toggle="tooltip" data-original-title="Refresh..." title="Refresh..." class="btn btn-tool" (click)="fullReload()">
                   <i class="fas fa-sync" (click)="fullReload()" title="Refresh..."></i>
               </button>
-              <button type="button" data-placement="bottom" data-toggle="tooltip" data-original-title="Create cluster..." title="Create cluster..." class="btn btn-tool" (click)="showNew()">
+              <button type="button" data-placement="bottom" data-toggle="tooltip" data-original-title="Create cluster..." title="Create cluster..." class="btn btn-tool" (click)="showNew()" *ngIf="cdiCheck">
                   <i class="fas fa-plus-square" (click)="showNew()" title="Create cluster..."></i>
               </button>
             </div>

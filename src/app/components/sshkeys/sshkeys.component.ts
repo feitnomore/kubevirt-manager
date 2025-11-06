@@ -5,6 +5,7 @@ import { Secret } from 'src/app/interfaces/secret';
 import { SSHKey } from 'src/app/models/sshkey.model';
 import { K8sService } from 'src/app/services/k8s.service';
 import { Config } from 'datatables.net';
+import { Constants } from 'src/app/constants';
 
 @Component({
   selector: 'app-sshkeys',
@@ -13,6 +14,7 @@ import { Config } from 'datatables.net';
 })
 export class SSHKeysComponent implements OnInit {
 
+    myConstants!: Constants;
     keyList: SSHKey [] = [];
     namespacesList: string[] = [];
 
@@ -46,6 +48,7 @@ export class SSHKeysComponent implements OnInit {
         if(navTitle != null) {
             navTitle.replaceChildren("SSH Keys");
         }
+        this.myConstants = new Constants();
         await this.getKeys();
         this.sshList_dtTrigger.next(null);
         await this.getNamespaces();
@@ -131,11 +134,11 @@ export class SSHKeysComponent implements OnInit {
                     name: name,
                     namespace: namespace,
                     labels: {
-                        'kubevirt-manager.io/managed': "true",
-                        'kubevirt-manager.io/ssh': "true"
+                        [this.myConstants.KubevirtManagerManaged]: "true",
+                        [this.myConstants.KubevirtManagerSsh]: "true"
                     }
                 },
-                type: "kubernetes.io/ssh-auth",
+                type: this.myConstants.KubernetesSecretSshAuth,
                 data: {
                     'ssh-privatekey': btoa(value)
                 }

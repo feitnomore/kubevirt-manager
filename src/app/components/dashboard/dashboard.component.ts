@@ -7,6 +7,7 @@ import { KubeVirtService } from 'src/app/services/kube-virt.service';
 import { PrometheusService } from 'src/app/services/prometheus.service';
 import { Chart } from 'chart.js/auto'
 import { XK8sService } from 'src/app/services/x-k8s.service';
+import { Constants } from 'src/app/constants';
 
 @Component({
   selector: 'app-dashboard',
@@ -14,6 +15,10 @@ import { XK8sService } from 'src/app/services/x-k8s.service';
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
+
+    crdList: any;
+    cdiCheck: boolean = false;
+    myConstants!: Constants;
 
     nodeInfo = {
         'total': 0,
@@ -73,7 +78,10 @@ export class DashboardComponent implements OnInit {
         if(navTitle != null) {
             navTitle.replaceChildren("Dashboard");
         }
+        this.myConstants = new Constants();
         await this.getNodes();   // Needed to calculate CPU Graph
+        await this.loadCrds();
+        await this.checkCDI();
         this.getVMs();
         this.getDisks();
         this.getNetworks();
@@ -712,6 +720,33 @@ export class DashboardComponent implements OnInit {
         inputSize = inputSize.replace('Ki','');
         var fileSize = Number.parseFloat(inputSize)  / (1024*1024);
         return (Math.round(fileSize * 100) / 100);
+    }
+
+    /*
+     * Load CRDs
+     */
+    async loadCrds(): Promise<void> {
+      try {
+          const data = await lastValueFrom(this.k8sApisService.getCrds());
+          this.crdList = data.items;
+      } catch (e: any) {
+          this.crdList = [];
+      }
+    }
+
+    /*
+     * Check CDI Support
+     */
+    async checkCDI(): Promise<void> {
+      for (let i = 0; i < this.crdList.length; i++) {
+          if(this.crdList[i].metadata["name"] == this.myConstants.ContainerizedDataImporter) {
+              this.cdiCheck = true;
+          }
+      }
+
+      if(this.cdiCheck == false) {
+        alert('CDI not found. CDI is a required component for this solution!')
+      }
     }
 
     /*

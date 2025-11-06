@@ -1,3 +1,4 @@
+
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
@@ -18,6 +19,7 @@ import { KubeadmConfigTemplate } from 'src/app/interfaces/kubeadm-config-templat
 import { MachineDeployment } from 'src/app/interfaces/machine-deployment';
 import { DataVolume } from 'src/app/interfaces/data-volume';
 import { KubevirtMachineTemplate } from 'src/app/interfaces/kubevirt-machine-template';
+import { Constants } from 'src/app/constants';
  
 @Component({
   selector: 'app-kcluster-details',
@@ -26,6 +28,7 @@ import { KubevirtMachineTemplate } from 'src/app/interfaces/kubevirt-machine-tem
 })
 export class KClusterDetailsComponent implements OnInit {
 
+    myConstants!: Constants;
     clusterName: string = "";
     clusterNamespace: string = "";
     clusterImageList: any;
@@ -55,6 +58,7 @@ export class KClusterDetailsComponent implements OnInit {
         if(navTitle != null) {
             navTitle.replaceChildren("Kubernetes Cluster Details");
         }
+        this.myConstants = new Constants();
         await this.loadCluster();
         await this.loadControlPlaneVMs();
         await this.loadClusterFeatures();
@@ -88,8 +92,8 @@ export class KClusterDetailsComponent implements OnInit {
                 currentLoadBalancer.creationTimestamp = new Date(services[i].metadata.creationTimestamp);
                 currentLoadBalancer.type = services[i].spec.type;
                 currentLoadBalancer.clusterIP = services[i].spec.clusterIP;
-                if (services[i].metadata.labels["cluster.x-k8s.io/tenant-service-name"] != null) {
-                    currentLoadBalancer.targetResource = services[i].metadata.labels["cluster.x-k8s.io/tenant-service-namespace"] + ":" + services[i].metadata.labels["cluster.x-k8s.io/tenant-service-name"];
+                if (services[i].metadata.labels[this.myConstants.KubernetesClusterTenantServiceName] != null) {
+                    currentLoadBalancer.targetResource = services[i].metadata.labels[this.myConstants.KubernetesClusterTenantServiceNamespace] + ":" + services[i].metadata.labels[this.myConstants.KubernetesClusterTenantServiceName];
                 } else {
                     currentLoadBalancer.targetResource = "N/A";
                 }
@@ -160,8 +164,8 @@ export class KClusterDetailsComponent implements OnInit {
         if(cluster.metadata.labels != null) {
             thisCluster.labels = cluster.metadata.labels;
             try {
-                if(cluster.metadata.labels["capk.kubevirt-manager.io/cni"] != null) {
-                    thisCluster.cniPlugin = cluster.metadata.labels["capk.kubevirt-manager.io/cni"];
+                if(cluster.metadata.labels[this.myConstants.KubevirtManagerClusterCni] != null) {
+                    thisCluster.cniPlugin = cluster.metadata.labels[this.myConstants.KubevirtManagerClusterCni];
                 } else {
                     thisCluster.cniPlugin = "manual";
                 }
@@ -170,8 +174,8 @@ export class KClusterDetailsComponent implements OnInit {
                 console.log(e);
             }
             try {
-                if(cluster.metadata.labels["capk.kubevirt-manager.io/cni-version"] != null) {
-                    thisCluster.cniPluginVersion = cluster.metadata.labels["capk.kubevirt-manager.io/cni-version"];
+                if(cluster.metadata.labels[this.myConstants.KubevirtManagerClusterCniVersion] != null) {
+                    thisCluster.cniPluginVersion = cluster.metadata.labels[this.myConstants.KubevirtManagerClusterCniVersion];
                 } else {
                     thisCluster.cniPluginVersion = "manual";
                 }
@@ -181,8 +185,8 @@ export class KClusterDetailsComponent implements OnInit {
                 console.log(e);
             }
             try {
-                if(cluster.metadata.labels["capk.kubevirt-manager.io/cni-vxlanport"] != null) {
-                    thisCluster.cniVXLANPort = cluster.metadata.labels["capk.kubevirt-manager.io/cni-vxlanport"];
+                if(cluster.metadata.labels[this.myConstants.KubevirtManagerClusterCniPort] != null) {
+                    thisCluster.cniVXLANPort = cluster.metadata.labels[this.myConstants.KubevirtManagerClusterCniPort];
                 } else {
                     thisCluster.cniVXLANPort = "manual";
                 }
@@ -192,8 +196,8 @@ export class KClusterDetailsComponent implements OnInit {
                 console.log(e);
             }
             try {
-                if(cluster.metadata.labels["capk.kubevirt-manager.io/autoscaler"] != null) {
-                    if(cluster.metadata.labels["capk.kubevirt-manager.io/autoscaler"] == "true") {
+                if(cluster.metadata.labels[this.myConstants.KubevirtManagerClusterAutoscaler] != null) {
+                    if(cluster.metadata.labels[this.myConstants.KubevirtManagerClusterAutoscaler] == "true") {
                         thisCluster.clusterAutoscaler = true;
                         this.enableNewPoolAutoscaling();
                     } else {
@@ -456,7 +460,7 @@ export class KClusterDetailsComponent implements OnInit {
             }
             try {
                 if(vms[i].spec.template.spec.nodeSelector) {
-                    currentVm.nodeSel = vms[i].spec.template.spec.nodeSelector["kubernetes.io/hostname"];
+                    currentVm.nodeSel = vms[i].spec.template.spec.nodeSelector[this.myConstants.KubernetesHostname];
                 } else {
                     currentVm.nodeSel = "auto-select";
                 }
@@ -1074,27 +1078,27 @@ export class KClusterDetailsComponent implements OnInit {
             let machineDeploymentAnnotations = {};
 
             /* Load other labels */
-            let thisLabel = { 'kubevirt-manager.io/cluster-name': name };
+            let thisLabel = { [this.myConstants.KubevirtManagerCluster]: name };
             Object.assign(tmpLabels, thisLabel);
             Object.assign(machineTemplateLabels, thisLabel)
 
-            let kubevirtManagerLabel = { 'kubevirt-manager.io/managed': "true" };
+            let kubevirtManagerLabel = { [this.myConstants.KubevirtManagerManaged]: "true" };
             Object.assign(tmpLabels, kubevirtManagerLabel);
-            Object.assign(tmpLabels, { 'capk.kubevirt-manager.io/autoscaler': nodepoolautoscaling });
+            Object.assign(tmpLabels, { [this.myConstants.KubevirtManagerClusterAutoscaler]: nodepoolautoscaling });
 
             
             /* Machine Labels */
-            Object.assign(machineTemplateLabels, { 'kubevirt-manager.io/cluster-name': name });
-            Object.assign(machineTemplateLabels, { 'kubevirt-manager.io/managed': "true" });
-            Object.assign(machineTemplateLabels, { 'capk.kubevirt-manager.io/flavor': nodepoolosdist });
-            Object.assign(machineTemplateLabels, { 'capk.kubevirt-manager.io/flavor-version': nodepoolosversion });
-            Object.assign(machineTemplateLabels, { 'capk.kubevirt-manager.io/kube-version' : version });
-            Object.assign(machineTemplateLabels, { 'kubevirt.io/domain': name + "-" + nodepoolname });
+            Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtManagerCluster]: name });
+            Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtManagerManaged]: "true" });
+            Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtManagerClusterFlavor]: nodepoolosdist });
+            Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtManagerClusterFlavorVersion]: nodepoolosversion });
+            Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtManagerClusterKubernetesVersion] : version });
+            Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtDomain]: name + "-" + nodepoolname });
 
             /* MachineDeployment Annotations */
             if(nodepoolautoscaling == "true") {
-                Object.assign(machineDeploymentAnnotations, { 'cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size': nodepoolminreplicas });
-                Object.assign(machineDeploymentAnnotations, { 'cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size': nodepoolmaxreplicas });
+                Object.assign(machineDeploymentAnnotations, { [this.myConstants.KubevirtManagerClusterAutoscalerMin]: nodepoolminreplicas });
+                Object.assign(machineDeploymentAnnotations, { [this.myConstants.KubevirtManagerClusterAutoscalerMax]: nodepoolmaxreplicas });
             }
 
             /* KubeadmConfig */

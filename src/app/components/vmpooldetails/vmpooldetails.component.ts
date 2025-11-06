@@ -11,6 +11,7 @@ import { KubeVirtService } from 'src/app/services/kube-virt.service';
 import { Probe } from 'src/app/interfaces/probe';
 import { VMNewtork } from 'src/app/models/vmnewtork.model';
 import { KubeVirtClusterInstanceType } from 'src/app/models/kube-virt-clusterinstancetype';
+import { Constants } from 'src/app/constants';
 
 @Component({
   selector: 'app-vmpooldetails',
@@ -19,6 +20,7 @@ import { KubeVirtClusterInstanceType } from 'src/app/models/kube-virt-clusterins
 })
 export class VmpooldetailsComponent implements OnInit {
 
+    myConstants!: Constants;
     poolName: string = "";
     poolNamespace: string = "";
     poolNetwork = {
@@ -86,6 +88,7 @@ export class VmpooldetailsComponent implements OnInit {
         if(navTitle != null) {
             navTitle.replaceChildren("Virtual Machine Pool Details");
         }
+        this.myConstants = new Constants();
         await this.getClusterInstanceTypes();
         await this.getVMIs();
         await this.loadPool();
@@ -322,8 +325,8 @@ export class VmpooldetailsComponent implements OnInit {
             if (currentVm.status.toLowerCase() == "running") {
                 currentVm.running = true;
             }
-            if (vms[i].spec.template.spec.nodeSelector !== undefined && vms[i].spec.template.spec.nodeSelector["kubernetes.io/hostname"] !== undefined && vms[i].spec.template.spec.nodeSelector["kubernetes.io/hostname"] != "") { 
-                currentVm.nodeSel = vms[i].spec.template.spec.nodeSelector["kubernetes.io/hostname"];
+            if (vms[i].spec.template.spec.nodeSelector !== undefined && vms[i].spec.template.spec.nodeSelector[this.myConstants.KubernetesHostname] !== undefined && vms[i].spec.template.spec.nodeSelector[this.myConstants.KubernetesHostname] != "") { 
+                currentVm.nodeSel = vms[i].spec.template.spec.nodeSelector[this.myConstants.KubernetesHostname];
             } else {
                 currentVm.nodeSel = "auto-select";
             }

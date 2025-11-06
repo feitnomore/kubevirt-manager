@@ -9,6 +9,7 @@ import { Services } from 'src/app/interfaces/services';
 import { ServicesPort } from 'src/app/interfaces/services-port';
 import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
 import { Config } from 'datatables.net';
+import { Constants } from 'src/app/constants';
 
 @Component({
   selector: 'app-load-balancers',
@@ -17,6 +18,7 @@ import { Config } from 'datatables.net';
 })
 export class LoadBalancersComponent implements OnInit {
 
+    myConstants!: Constants;
     loadBalancerList: LoadBalancer[] = [];
     charDot = '.';
 
@@ -75,6 +77,7 @@ export class LoadBalancersComponent implements OnInit {
         this.labelList = this.fb.group({
             labels: this.fb.array([]),
         });
+        this.myConstants = new Constants();
         await this.getLoadBalancers();
         this.lbList_dtTrigger.next(null);
     }
@@ -245,12 +248,12 @@ export class LoadBalancersComponent implements OnInit {
                 currentLoadBalancer.creationTimestamp = new Date(services[i].metadata.creationTimestamp);
                 currentLoadBalancer.type = services[i].spec.type;
                 currentLoadBalancer.clusterIP = services[i].spec.clusterIP;
-                if(services[i].spec.selector["kubevirt.io/vmpool"] != null) {
-                    currentLoadBalancer.targetResource = services[i].spec.selector["kubevirt.io/vmpool"];
-                } else if (services[i].spec.selector["cluster.x-k8s.io/cluster-name"] != null) {
-                    currentLoadBalancer.targetResource = services[i].spec.selector["cluster.x-k8s.io/cluster-name"];
-                } else if(services[i].spec.selector["kubevirt.io/domain"] != null) {
-                    currentLoadBalancer.targetResource = services[i].spec.selector["kubevirt.io/domain"];
+                if(services[i].spec.selector[this.myConstants.KubevirtVmPool] != null) {
+                    currentLoadBalancer.targetResource = services[i].spec.selector[this.myConstants.KubevirtVmPool];
+                } else if (services[i].spec.selector[this.myConstants.KubernetesClusterName] != null) {
+                    currentLoadBalancer.targetResource = services[i].spec.selector[this.myConstants.KubernetesClusterName];
+                } else if(services[i].spec.selector[this.myConstants.KubevirtDomain] != null) {
+                    currentLoadBalancer.targetResource = services[i].spec.selector[this.myConstants.KubevirtDomain];
                 }
                 if(currentLoadBalancer.type.toLowerCase() == "loadbalancer" && services[i].status.loadBalancer.ingress) {
                     if(services[i].status.loadBalancer.ingress[0].ip != null) {
@@ -529,27 +532,27 @@ export class LoadBalancersComponent implements OnInit {
             let thisSelector = {};
             if(newlbtargetresourcetype == "vmpool") {
                 let vmPoolLabel = {
-                    ["kubevirt.io/vmpool"]: newlbtargetresource
+                    [this.myConstants.KubevirtVmPool]: newlbtargetresource
                 };
                 Object.assign(tmpLabels, vmPoolLabel);
                 Object.assign(thisSelector, vmPoolLabel);
             } else if(newlbtargetresourcetype == "vminstance") {
                 let vmInstanceLabel = {
-                    ["kubevirt.io/domain"]: newlbtargetresource
+                    [this.myConstants.KubevirtDomain]: newlbtargetresource
                 };
                 Object.assign(tmpLabels, vmInstanceLabel);
                 Object.assign(thisSelector, vmInstanceLabel);
             } else if(newlbtargetresourcetype == "capk") {
                 let thisSelector = {};
                 let vmClusterLabel = {
-                    ["cluster.x-k8s.io/cluster-name"]: newlbtargetresource
+                    [this.myConstants.KubernetesClusterName]: newlbtargetresource
                 };
                 Object.assign(tmpLabels, vmClusterLabel);
                 Object.assign(thisSelector, vmClusterLabel);
             }
 
             let kubevirtManagerLabel = {
-                ["kubevirt-manager.io/managed"]: "true"
+                [this.myConstants.KubevirtManagerManaged]: "true"
             };
             Object.assign(tmpLabels, kubevirtManagerLabel);
 

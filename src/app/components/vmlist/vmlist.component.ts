@@ -3,7 +3,7 @@ import { K8sService } from 'src/app/services/k8s.service';
 import { KubeVirtService } from 'src/app/services/kube-virt.service';
 import { K8sNode } from 'src/app/models/k8s-node.model';
 import { KubeVirtVM } from 'src/app/models/kube-virt-vm.model';
-import { Subject, lastValueFrom } from 'rxjs';
+import { Observable, Subject, lastValueFrom, map, startWith } from 'rxjs';
 import { Router } from '@angular/router';
 import { NetworkAttach } from 'src/app/models/network-attach.model';
 import { K8sApisService } from 'src/app/services/k8s-apis.service';
@@ -12,10 +12,11 @@ import { DataVolume } from 'src/app/interfaces/data-volume';
 import { VirtualMachine } from 'src/app/interfaces/virtual-machine';
 import { KubevirtMgrService } from 'src/app/services/kubevirt-mgr.service';
 import { FirewallLabels } from 'src/app/models/firewall-labels.model';
-import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { KubeVirtClusterInstanceType } from 'src/app/models/kube-virt-clusterinstancetype';
 import { Config } from 'datatables.net';
 import { KubeVirtVMI } from 'src/app/models/kube-virt-vmi.model';
+import { Constants } from 'src/app/constants';
 
 @Component({
     selector: 'app-vmlist',
@@ -24,6 +25,8 @@ import { KubeVirtVMI } from 'src/app/models/kube-virt-vmi.model';
 })
 export class VmlistComponent implements OnInit {
 
+    myConstants!: Constants;
+    crdList: any;
     nodeList: K8sNode[] = [];
     vmList: KubeVirtVM[] = [];
     vmiList: KubeVirtVMI[] = [];
@@ -32,7 +35,10 @@ export class VmlistComponent implements OnInit {
     networkList: NetworkAttach[] = [];
     netAttachList: NetworkAttach[] = []
     networkCheck: boolean = false;
+    cdiCheck: boolean = false;
     firewallLabels: FirewallLabels = new FirewallLabels;
+
+    showSuggestions: boolean = false;
 
     /*
      * Dynamic Forms
@@ -58,6 +64,13 @@ export class VmlistComponent implements OnInit {
         order: [[1, 'asc']],
     };
     vmList_dtTrigger: Subject<any> = new Subject<any>();
+
+    /*
+     * Cloud Init networking helper
+     */
+    cloudInitNetworks: string[] = [];
+    couldInitNetworkControl = new FormControl('');
+    filteredOptions!: Observable<string[]>;
 
     constructor(
         private router: Router,
@@ -87,12 +100,15 @@ export class VmlistComponent implements OnInit {
         if(navTitle != null) {
             navTitle.replaceChildren("Virtual Machines");
         }
+        this.myConstants = new Constants();
         await this.getNodes();
         await this.getClusterInstanceTypes();
         await this.getVMIs();
         await this.getVMs();
+        await this.loadCrds();
         this.vmList_dtTrigger.next(null);
         await this.checkNetwork();
+        await this.checkCDI();
         this.annotationList = this.fb.group({
             annotations: this.fb.array([]),
         });
@@ -105,6 +121,13 @@ export class VmlistComponent implements OnInit {
         this.nicList = this.fb.group({
             nics: this.fb.array([]),
         });
+        /* load network options for cloud init */
+        this.cloudInitNetworks = this.myConstants.cloudInitNetworks;
+        /* for cloud init */
+        this.filteredOptions = this.couldInitNetworkControl.valueChanges.pipe(
+            startWith(''),
+            map(value => this._filter(value || '')),
+        );
     }
 
     ngOnDestroy() {
@@ -323,6 +346,16 @@ export class VmlistComponent implements OnInit {
     }
 
     /*
+     * Cloud Init network filter
+     */
+    private _filter(value: string): string[] {
+        const filterValue = value.toLowerCase();
+        
+        // Filter using includes (can be startsWith)
+        return this.cloudInitNetworks.filter(option => option.toLowerCase().includes(filterValue));
+    }
+
+    /*
      * Load Nodes
      */
     async getNodes(): Promise<void> {
@@ -379,8 +412,8 @@ export class VmlistComponent implements OnInit {
                 currentVm.runStrategy = "";
                 console.log("Error loading VM runStrategy");
             }
-            if (vms[i].spec.template.spec.nodeSelector !== undefined && vms[i].spec.template.spec.nodeSelector["kubernetes.io/hostname"] !== undefined && vms[i].spec.template.spec.nodeSelector["kubernetes.io/hostname"] != "") { 
-                currentVm.nodeSel = vms[i].spec.template.spec.nodeSelector["kubernetes.io/hostname"];
+            if (vms[i].spec.template.spec.nodeSelector !== undefined && vms[i].spec.template.spec.nodeSelector[this.myConstants.KubernetesHostname] !== undefined && vms[i].spec.template.spec.nodeSelector[this.myConstants.KubernetesHostname] != "") { 
+                currentVm.nodeSel = vms[i].spec.template.spec.nodeSelector[this.myConstants.KubernetesHostname];
             } else {
                 currentVm.nodeSel = "auto-select";
             }
@@ -639,6 +672,7 @@ export class VmlistComponent implements OnInit {
         newvmuserdataauth: string,
         newvmuserdatapassword: string,
         newvmuserdatassh: string,
+        newvmcloudinitdevice: string,
         newvmcloudinitip: string,
         newvmcloudinitnetmask: string,
         newvmcloudinitgw: string,
@@ -712,8 +746,8 @@ export class VmlistComponent implements OnInit {
             }
 
             /* Populate our VM with our Labels and Load */
-            Object.assign(tmpLabels, { 'kubevirt.io/domain': newvmname });
-            Object.assign(tmpLabels, { 'kubevirt-manager.io/managed': "true" });
+            Object.assign(tmpLabels, { [this.myConstants.KubevirtDomain]: newvmname });
+            Object.assign(tmpLabels, { [this.myConstants.KubevirtManagerManaged]: "true" });
             Object.assign(tmpLabels, { [this.firewallLabels.VirtualMachine]: newvmname });
             thisVirtualMachine.metadata.labels = tmpLabels;
             thisVirtualMachine.spec.template.metadata.labels = tmpLabels;
@@ -725,7 +759,7 @@ export class VmlistComponent implements OnInit {
 
             /* Node Selector */
             if(newvmnode != "auto-select") {
-                thisVirtualMachine.spec.template.spec.nodeSelector = {"kubernetes.io/hostname": newvmnode};
+                thisVirtualMachine.spec.template.spec.nodeSelector = { [this.myConstants.KubernetesHostname]: newvmnode};
             } else {
                 thisVirtualMachine.spec.template.spec.evictionStrategy = "LiveMigrate";
             }
@@ -738,7 +772,7 @@ export class VmlistComponent implements OnInit {
             let netconfig  ="version: 1\n";
                 netconfig += "config:\n";
                 netconfig += "    - type: physical\n";
-                netconfig += "      name: enp1s0\n";
+                netconfig += "      name: " + newvmcloudinitdevice + "\n";
                 netconfig += "      subnets:\n";
 
             /* Disk setup */
@@ -900,14 +934,14 @@ export class VmlistComponent implements OnInit {
 
             /* UserData Setup */
             if(newvmuserdatausername != "") {
-                Object.assign(thisVirtualMachine.metadata.labels, { "cloud-init.kubevirt-manager.io/username" : newvmuserdatausername });
-                Object.assign(thisVirtualMachine.spec.template.metadata.labels, { "cloud-init.kubevirt-manager.io/username" : newvmuserdatausername });
+                Object.assign(thisVirtualMachine.metadata.labels, { [this.myConstants.KubevirtManagerCloudInit] : newvmuserdatausername });
+                Object.assign(thisVirtualMachine.spec.template.metadata.labels, { [this.myConstants.KubevirtManagerCloudInit] : newvmuserdatausername });
             }
             if(newvmuserdataauth.toLowerCase() == "ssh") {
                 if (newvmuserdatassh != "") {
                     let sshLabels = {};
-                    Object.assign(sshLabels, { "kubevirt-manager.io/ssh" : "true" });
-                    Object.assign(sshLabels, { "cloud-init.kubevirt-manager.io/ssh" : newvmuserdatassh});
+                    Object.assign(sshLabels, { [this.myConstants.KubevirtManagerSsh] : "true" });
+                    Object.assign(sshLabels, { [this.myConstants.KubevirtManagerCloudInitSsh] : newvmuserdatassh});
                     Object.assign(thisVirtualMachine.metadata.labels, sshLabels);
                     try {
                         let sshSecret = await lastValueFrom(this.k8sService.getSecret(newvmnamespace, newvmuserdatassh));
@@ -1003,15 +1037,15 @@ export class VmlistComponent implements OnInit {
                             }
                         }
                         if (theseNetworks.length > 0) {
-                            Object.assign(thisVirtualMachine.metadata.labels, { 'k8s.v1.cni.cncf.io/networks': theseNetworks.join(".") });
-                            Object.assign(thisVirtualMachine.spec.template.metadata.labels, { 'k8s.v1.cni.cncf.io/networks': theseNetworks.join(".") });
+                            Object.assign(thisVirtualMachine.metadata.labels, { [this.myConstants.KubernetesCniNetworks]: theseNetworks.join(".") });
+                            Object.assign(thisVirtualMachine.spec.template.metadata.labels, { [this.myConstants.KubernetesCniNetworks]: theseNetworks.join(".") });
                         } else {
-                            Object.assign(thisVirtualMachine.metadata.labels, { 'k8s.v1.cni.cncf.io/networks': network_split[1] });
-                            Object.assign(thisVirtualMachine.spec.template.metadata.labels, { 'k8s.v1.cni.cncf.io/networks': network_split[1] });
+                            Object.assign(thisVirtualMachine.metadata.labels, { [this.myConstants.KubernetesCniNetworks]: network_split[1] });
+                            Object.assign(thisVirtualMachine.spec.template.metadata.labels, { [this.myConstants.KubernetesCniNetworks]: network_split[1] });
                         }
                     } else {
-                        Object.assign(thisVirtualMachine.metadata.labels, { 'k8s.v1.cni.cncf.io/networks': network_split[1] });
-                        Object.assign(thisVirtualMachine.spec.template.metadata.labels, { 'k8s.v1.cni.cncf.io/networks': network_split[1] });
+                        Object.assign(thisVirtualMachine.metadata.labels, { [this.myConstants.KubernetesCniNetworks]: network_split[1] });
+                        Object.assign(thisVirtualMachine.spec.template.metadata.labels, { [this.myConstants.KubernetesCniNetworks]: network_split[1] });
                     }
                 } else {
                     netObject = {'name': "net" + i.toString(), 'pod': {}};
@@ -1573,19 +1607,53 @@ export class VmlistComponent implements OnInit {
     }
 
     /*
+     * Select a Device Suggestion
+     */
+    selectSuggestion(option: string): void {
+        this.couldInitNetworkControl.setValue(option);
+        this.showSuggestions = false;
+    }
+
+    /*
+     * Hide Device Suggestions
+     */
+    hideSuggestions(): void {
+        setTimeout(() => {
+          this.showSuggestions = false;
+        }, 200);
+    }
+
+    /*
+     * Load CRDs
+     */
+    async loadCrds(): Promise<void> {
+        try {
+            const data = await lastValueFrom(this.k8sApisService.getCrds());
+            this.crdList = data.items;
+        } catch (e: any) {
+            this.crdList = [];
+        }
+    }
+
+    /*
      * Check Multus Support
      */
     async checkNetwork(): Promise<void> {
-        try {
-            const data = await lastValueFrom(this.k8sApisService.getCrds());
-            let crds = data.items;
-            for (let i = 0; i < crds.length; i++) {
-                if(crds[i].metadata["name"] == "network-attachment-definitions.k8s.cni.cncf.io") {
-                    this.networkCheck = true;
-                }
+        for (let i = 0; i <  this.crdList.length; i++) {
+            if(this.crdList[i].metadata["name"] == this.myConstants.NetworkAttachmentDefinition) {
+                this.networkCheck = true;
             }
-        } catch (e: any) {
-            console.log(e.error.message);
+        }
+    }
+
+    /*
+     * Check CDI Support
+     */
+    async checkCDI(): Promise<void> {
+        for (let i = 0; i < this.crdList.length; i++) {
+            if(this.crdList[i].metadata["name"] == this.myConstants.ContainerizedDataImporter) {
+                this.cdiCheck = true;
+            }
         }
     }
 

@@ -15,6 +15,7 @@ import { FirewallLabels } from 'src/app/models/firewall-labels.model';
 import { FormGroup, FormArray, FormBuilder } from '@angular/forms';
 import { KubeVirtClusterInstanceType } from 'src/app/models/kube-virt-clusterinstancetype';
 import { Config } from 'datatables.net';
+import { Constants } from 'src/app/constants';
 
 @Component({
   selector: 'app-vmpools',
@@ -23,11 +24,14 @@ import { Config } from 'datatables.net';
 })
 export class VMPoolsComponent implements OnInit {
 
+    myConstants!: Constants;
+    crdList: any;
     poolList: KubeVirtVMPool[] = [];
     namespaceList: string[] = [];
     clusterInstanceTypeList: KubeVirtClusterInstanceType[] = [];
     netAttachList: NetworkAttach[] = [];
     networkCheck: boolean = false;
+    cdiCheck: boolean = false;
     firewallLabels: FirewallLabels = new FirewallLabels;
 
     /*
@@ -86,10 +90,13 @@ export class VMPoolsComponent implements OnInit {
         if(navTitle != null) {
             navTitle.replaceChildren("Virtual Machine Pools");
         }
+        this.myConstants = new Constants();
+        await this.loadCrds();
         await this.getClusterInstanceTypes();
         await this.getPools();
         this.vmPool_dtTrigger.next(null);
         await this.checkNetwork();
+        await this.checkCDI();
         this.annotationList = this.fb.group({
             annotations: this.fb.array([]),
         });
@@ -102,6 +109,7 @@ export class VMPoolsComponent implements OnInit {
         this.nicList = this.fb.group({
             nics: this.fb.array([]),
         });
+
     }
 
     ngOnDestroy() {
@@ -618,8 +626,8 @@ export class VMPoolsComponent implements OnInit {
             }
 
             /* Populate our Pool with our Labels */
-            Object.assign(tmpLabels, { 'kubevirt.io/vmpool': newpoolname });
-            Object.assign(tmpLabels, { 'kubevirt-manager.io/managed': "true" });
+            Object.assign(tmpLabels, { [this.myConstants.KubevirtVmPool]: newpoolname });
+            Object.assign(tmpLabels, { [this.myConstants.KubevirtManagerManaged]: "true" });
             Object.assign(tmpLabels, { [this.firewallLabels.VirtualMachinePool]: newpoolname });
 
             /* Populate our Pool with our Labels */
@@ -789,15 +797,15 @@ export class VMPoolsComponent implements OnInit {
             /* UserData Setup */
             if(newpooluserdatausername != "") {
                 cloudconfig += "user: " + newpooluserdatausername + "\n";
-                Object.assign(thisVirtualMachinePool.metadata.labels, { "cloud-init.kubevirt-manager.io/username" : newpooluserdatausername });
-                Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.metadata.labels, { "cloud-init.kubevirt-manager.io/username" : newpooluserdatassh });
-                Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.spec.template.metadata.labels, { "cloud-init.kubevirt-manager.io/username" : newpooluserdatassh });
+                Object.assign(thisVirtualMachinePool.metadata.labels, { [this.myConstants.KubevirtManagerCloudInit] : newpooluserdatausername });
+                Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.metadata.labels, { [this.myConstants.KubevirtManagerCloudInit] : newpooluserdatassh });
+                Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.spec.template.metadata.labels, { [this.myConstants.KubevirtManagerCloudInit] : newpooluserdatassh });
             }
             if(newpooluserdataauth.toLowerCase() == "ssh") {
                 if (newpooluserdatassh != "") {
                     let sshLabels = {};
-                    Object.assign(sshLabels, { "kubevirt-manager.io/ssh" : "true" });
-                    Object.assign(sshLabels, { "cloud-init.kubevirt-manager.io/ssh" : newpooluserdatassh});
+                    Object.assign(sshLabels, { [this.myConstants.KubevirtManagerSsh] : "true" });
+                    Object.assign(sshLabels, { [this.myConstants.KubevirtManagerCloudInitSsh] : newpooluserdatassh});
                     Object.assign(thisVirtualMachinePool.metadata.labels, sshLabels);
                     Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.metadata.labels, sshLabels);
                     Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.spec.template.metadata.labels, sshLabels);
@@ -854,18 +862,18 @@ export class VMPoolsComponent implements OnInit {
                             }
                         }
                         if (theseNetworks.length > 0) {
-                            Object.assign(thisVirtualMachinePool.metadata.labels, { 'k8s.v1.cni.cncf.io/networks': theseNetworks.join(".") });
-                            Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.metadata.labels, { 'k8s.v1.cni.cncf.io/networks': theseNetworks.join(".") });
-                            Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.spec.template.metadata.labels, { 'k8s.v1.cni.cncf.io/networks': theseNetworks.join(".") });
+                            Object.assign(thisVirtualMachinePool.metadata.labels, { [this.myConstants.KubernetesCniNetworks]: theseNetworks.join(".") });
+                            Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.metadata.labels, { [this.myConstants.KubernetesCniNetworks]: theseNetworks.join(".") });
+                            Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.spec.template.metadata.labels, { [this.myConstants.KubernetesCniNetworks]: theseNetworks.join(".") });
                         } else {
-                            Object.assign(thisVirtualMachinePool.metadata.labels, { 'k8s.v1.cni.cncf.io/networks': network_split[1] });
-                            Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.metadata.labels, { 'k8s.v1.cni.cncf.io/networks': network_split[1] });
-                            Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.spec.template.metadata.labels, { 'k8s.v1.cni.cncf.io/networks': network_split[1] });
+                            Object.assign(thisVirtualMachinePool.metadata.labels, { [this.myConstants.KubernetesCniNetworks]: network_split[1] });
+                            Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.metadata.labels, { [this.myConstants.KubernetesCniNetworks]: network_split[1] });
+                            Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.spec.template.metadata.labels, { [this.myConstants.KubernetesCniNetworks]: network_split[1] });
                         }
                     } else {
-                        Object.assign(thisVirtualMachinePool.metadata.labels, { 'k8s.v1.cni.cncf.io/networks': network_split[1] });
-                        Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.metadata.labels, { 'k8s.v1.cni.cncf.io/networks': network_split[1] });
-                        Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.spec.template.metadata.labels, { 'k8s.v1.cni.cncf.io/networks': network_split[1] });
+                        Object.assign(thisVirtualMachinePool.metadata.labels, { [this.myConstants.KubernetesCniNetworks]: network_split[1] });
+                        Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.metadata.labels, { [this.myConstants.KubernetesCniNetworks]: network_split[1] });
+                        Object.assign(thisVirtualMachinePool.spec.virtualMachineTemplate.spec.template.metadata.labels, { [this.myConstants.KubernetesCniNetworks]: network_split[1] });
                     }
                 } else {
                     netObject = {'name': "net" + i.toString(), 'pod': {}};
@@ -1699,19 +1707,36 @@ export class VMPoolsComponent implements OnInit {
     }
 
     /*
+     * Load CRDs
+     */
+     async loadCrds(): Promise<void> {
+        try {
+            const data = await lastValueFrom(this.k8sApisService.getCrds());
+            this.crdList = data.items;
+        } catch (e: any) {
+            this.crdList = [];
+        }
+    }
+
+    /*
      * Check Multus Support
      */
     async checkNetwork(): Promise<void> {
-        try {
-            const data = await lastValueFrom(this.k8sApisService.getCrds());
-            let crds = data.items;
-            for (let i = 0; i < crds.length; i++) {
-                if(crds[i].metadata["name"] == "network-attachment-definitions.k8s.cni.cncf.io") {
-                    this.networkCheck = true;
-                }
+        for (let i = 0; i <  this.crdList.length; i++) {
+            if(this.crdList[i].metadata["name"] == this.myConstants.NetworkAttachmentDefinition) {
+                this.networkCheck = true;
             }
-        } catch (e: any) {
-            console.log(e);
+        }
+    }
+
+    /*
+     * Check CDI Support
+     */
+    async checkCDI(): Promise<void> {
+        for (let i = 0; i < this.crdList.length; i++) {
+            if(this.crdList[i].metadata["name"] == this.myConstants.ContainerizedDataImporter) {
+                this.cdiCheck = true;
+            }
         }
     }
 
