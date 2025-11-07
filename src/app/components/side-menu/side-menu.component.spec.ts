@@ -70,12 +70,6 @@ describe('SideMenuComponent', () => {
     const contentValue = componentElem.nativeElement;
     expect(contentValue).toBeTruthy();
   });
-  it('should contain Data Volumes item', () => {
-    const componentDoc: DebugElement = fixture.debugElement;
-    const componentElem = componentDoc.query(By.css('.fa-database'))
-    const contentValue = componentElem.nativeElement;
-    expect(contentValue).toBeTruthy();
-  });
   it('should contain Instance Types item', () => {
     const componentDoc: DebugElement = fixture.debugElement;
     const componentElem = componentDoc.query(By.css('.fa-book'))

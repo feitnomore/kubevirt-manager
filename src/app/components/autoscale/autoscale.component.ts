@@ -7,6 +7,7 @@ import { K8sService } from 'src/app/services/k8s.service';
 import { KubeVirtService } from 'src/app/services/kube-virt.service';
 import { HorizontalPodAutoscaler } from 'src/app/interfaces/horizontal-pod-autoscaler';
 import { Config } from 'datatables.net';
+import { Constants } from 'src/app/constants';
 
 @Component({
   selector: 'app-autoscale',
@@ -15,6 +16,7 @@ import { Config } from 'datatables.net';
 })
 export class AutoscaleComponent implements OnInit {
 
+    myConstants!: Constants;
     hpaList: K8sHPA[] = [];
 
     /*
@@ -46,6 +48,7 @@ export class AutoscaleComponent implements OnInit {
         if(navTitle != null) {
             navTitle.replaceChildren("Auto Scaling");
         }
+        this.myConstants = new Constants();
         await this.getHPAs();
         this.hpaList_dtTrigger.next(null);
     }
@@ -283,7 +286,7 @@ export class AutoscaleComponent implements OnInit {
                     name: newhpaname,
                     namespace: newhpanamespace,
                     labels: {
-                        ["kubevirt-manager.io/managed"]: "true"
+                        [this.myConstants.KubevirtManagerManaged]: "true"
                     }
                 },
                 spec: {

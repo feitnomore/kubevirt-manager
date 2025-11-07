@@ -9,10 +9,7 @@ export interface ClusterResourceSet {
     };
     spec: {
         clusterSelector: {
-            matchLabels: {
-                "kubevirt-manager.io/cluster-name": string;
-                "capk.kubevirt-manager.io/cni": string;
-            };
+            matchLabels?: {};
         };
         resources:
             {

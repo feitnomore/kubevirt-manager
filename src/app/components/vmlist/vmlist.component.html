@@ -12,7 +12,7 @@
               <button type="button" data-placement="bottom" data-toggle="tooltip" data-original-title="Refresh..." title="Refresh..." class="btn btn-tool" (click)="fullReload()">
                   <i class="fas fa-sync" (click)="fullReload()" title="Refresh..."></i>
               </button>
-              <button type="button" data-placement="bottom" data-toggle="tooltip" data-original-title="New VM..." title="New VM..." class="btn btn-tool" (click)="showNewVm()">
+              <button type="button" data-placement="bottom" data-toggle="tooltip" data-original-title="New VM..." title="New VM..." class="btn btn-tool" (click)="showNewVm()" *ngIf="cdiCheck">
                   <i class="fas fa-plus-square" (click)="showNewVm()" title="New VM..."></i>
               </button>
             </div>
@@ -201,7 +201,7 @@
                     <a class="nav-link" id="newvm-netdata-tab" data-toggle="pill" href="#newvm-netdata" role="tab" aria-controls="newvm-netdata" aria-selected="false" style="display: none;">Network Data</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link" id="newpool-initscript-tab" data-toggle="pill" href="#newpool-initscript" role="tab" aria-controls="newpool-initscript" aria-selected="false">Init Script</a>
+                    <a class="nav-link" id="newvm-initscript-tab" data-toggle="pill" href="#newvm-initscript" role="tab" aria-controls="newvm-initscript" aria-selected="false">Init Script</a>
                   </li>
                 </ul>
               </div>
@@ -505,6 +505,13 @@
                   </div>
                   <!-- NETWORK DATA TAB -->
                   <div class="tab-pane fade" id="newvm-netdata" role="tabpanel" aria-labelledby="newvm-netdata-tab">
+                    <label for="newvm-netdata-device">nic0 Device:</label>
+                    <div class="autocomplete-container">
+                      <input #newvmnetdatadevice type="text" [formControl]="couldInitNetworkControl" (focus)="showSuggestions = true" (blur)="hideSuggestions()" class="form-control" id="newvm-netdata-device" name="newvm-netdata-device" placeholder="Eg: eth0, eno1, enp2s0f0np0">
+                      <ul *ngIf="showSuggestions && (filteredOptions | async)?.length" class="suggestions-list">
+                        <p *ngFor="let option of filteredOptions | async" (mousedown)="selectSuggestion(option)" class="suggestion-item">{{ option }}</p>
+                      </ul>
+                    </div>
                     <label for="newvm-netdata-ip">nic0 IP:</label>
                     <input #newvmnetdataip type="text" class="form-control" id="newvm-netdata-ip" name="newvm-netdata-ip">
                     <label for="newvm-netdata-netmask">nic0 Netmask:</label>
@@ -517,8 +524,8 @@
                     <input #newvmnetdatadns2 type="text" class="form-control" id="newvm-netdata-dns2" name="newvm-netdata-dns2">
                   </div>
                   <!-- INIT SCRIPT -->
-                  <div class="tab-pane fade" id="newpool-initscript" role="tabpanel" aria-labelledby="newpool-initscript-tab">
-                    <textarea #newpoolinitscript class="form-control" rows="14" cols="10" name="newpool-initscript" id="newpool-initscript" placeholder=""></textarea>
+                  <div class="tab-pane fade" id="newvm-initscript" role="tabpanel" aria-labelledby="newvm-initscript-tab">
+                    <textarea #newvminitscript class="form-control" rows="14" cols="10" name="newvm-initscript" id="newvm-initscript" placeholder=""></textarea>
                   </div>
                 </div>
               </div>
@@ -527,7 +534,7 @@
           </div>
           <div class="modal-footer justify-content-between">
             <button type="button" class="btn btn-default" (click)='hideComponent("modal-newvm")'>Close</button>
-            <button type="button" class="btn btn-primary" (click)="applyNewVm(newvmname.value, newvmnamespace.value, newvmnode.value, newvmrunstrategy.value, newvmtype.value, newvmcpumemsockets.value, newvmcpumemcores.value, newvmcpumemthreads.value, newvmcpumemmemory.value, newvmpc.value, newvmfirmware.value, newvmsecureboot.value, newvmuserdatausername.value, newvmuserdataauth.value, newvmuserdatapassword.value, newvmuserdatassh.value, newvmnetdataip.value, newvmnetdatanetmask.value, newvmnetdatagw.value, newvmnetdatadns1.value, newvmnetdatadns2.value, newpoolinitscript.value)">Create</button>
+            <button type="button" class="btn btn-primary" (click)="applyNewVm(newvmname.value, newvmnamespace.value, newvmnode.value, newvmrunstrategy.value, newvmtype.value, newvmcpumemsockets.value, newvmcpumemcores.value, newvmcpumemthreads.value, newvmcpumemmemory.value, newvmpc.value, newvmfirmware.value, newvmsecureboot.value, newvmuserdatausername.value, newvmuserdataauth.value, newvmuserdatapassword.value, newvmuserdatassh.value, newvmnetdatadevice.value, newvmnetdataip.value, newvmnetdatanetmask.value, newvmnetdatagw.value, newvmnetdatadns1.value, newvmnetdatadns2.value, newvminitscript.value)">Create</button>
           </div>
         </div>
         </div>

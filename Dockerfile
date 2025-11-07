@@ -19,8 +19,8 @@ LABEL description="Kubevirt Manager nightly - Builder"
 
 WORKDIR /usr/src/app
 COPY . /usr/src/app
-RUN cd /usr/src/app/src/assets/ && git clone https://github.com/novnc/noVNC.git
 RUN cd /usr/src/app && npm install -g npm@10.8.2 && npm run clean && npm install -g @angular/cli@18.1.1 && npm install && npm run build
+RUN cd /usr/src/app/dist/kubevirtmgr-webui/browser/assets/ && git clone https://github.com/novnc/noVNC.git
 
 # OAUTH2 IMAGE
 FROM quay.io/oauth2-proxy/oauth2-proxy:latest AS oauth2_proxy_downloader

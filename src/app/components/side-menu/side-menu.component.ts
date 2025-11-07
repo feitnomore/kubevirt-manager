@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
 import { K8sApisService } from 'src/app/services/k8s-apis.service';
+import { Constants } from 'src/app/constants';
 
 @Component({
   selector: 'app-side-menu',
@@ -13,16 +14,20 @@ export class SideMenuComponent implements OnInit {
     networkCheck: boolean = false;
     capkCheck: boolean = false;
     imgCheck: boolean = false;
+    cdiCheck: boolean = false;
+    myConstants!: Constants;
 
     constructor(
         private k8sApisService: K8sApisService
     ) { }
 
     async ngOnInit(): Promise<void> {
+        this.myConstants = new Constants();
         await this.loadCrds();
         this.checkNetwork();
         this.checkCapk();
         this.checkImage();
+        this.checkCDI();
     }
 
     /*
@@ -48,17 +53,17 @@ export class SideMenuComponent implements OnInit {
         let kubevirtclusters: boolean = false;
         let kubevirtmachinetemplates: boolean = false;
         for (let i = 0; i < this.crdList.length; i++) {
-            if(this.crdList[i].metadata["name"] == "clusters.cluster.x-k8s.io") {
+            if(this.crdList[i].metadata["name"] == this.myConstants.Clusters) {
                 cluster = true;
-            } else if(this.crdList[i].metadata["name"] == "kubeadmconfigs.bootstrap.cluster.x-k8s.io") {
+            } else if(this.crdList[i].metadata["name"] == this.myConstants.KubeadmConfigs) {
                 kubeadm = true;
-            } else if(this.crdList[i].metadata["name"] == "kubeadmcontrolplanes.controlplane.cluster.x-k8s.io") {
+            } else if(this.crdList[i].metadata["name"] == this.myConstants.KubeadmControlPlanes) {
                 kubeadmcontrolplane = true;
-            } else if(this.crdList[i].metadata["name"] == "machinedeployments.cluster.x-k8s.io") {
+            } else if(this.crdList[i].metadata["name"] ==this.myConstants.MachineDeployments) {
                 machinedeployments = true;
-            } else if(this.crdList[i].metadata["name"] == "kubevirtclusters.infrastructure.cluster.x-k8s.io") {
+            } else if(this.crdList[i].metadata["name"] == this.myConstants.KubevirtClusters) {
                 kubevirtclusters = true;
-            } else if(this.crdList[i].metadata["name"] == "kubevirtmachinetemplates.infrastructure.cluster.x-k8s.io") {
+            } else if(this.crdList[i].metadata["name"] == this.myConstants.KubevirtMachineTemplates) {
                 kubevirtmachinetemplates = true;
             }
         }
@@ -73,7 +78,7 @@ export class SideMenuComponent implements OnInit {
      */
     async checkNetwork(): Promise<void> {
         for (let i = 0; i < this.crdList.length; i++) {
-            if(this.crdList[i].metadata["name"] == "network-attachment-definitions.k8s.cni.cncf.io") {
+            if(this.crdList[i].metadata["name"] == this.myConstants.NetworkAttachmentDefinition) {
                 this.networkCheck = true;
             }
         }
@@ -84,8 +89,19 @@ export class SideMenuComponent implements OnInit {
      */
     async checkImage(): Promise<void> {
         for (let i = 0; i < this.crdList.length; i++) {
-            if(this.crdList[i].metadata["name"] == "images.kubevirt-manager.io") {
+            if(this.crdList[i].metadata["name"] == this.myConstants.KubevirtManagerImages) {
                 this.imgCheck = true;
+            }
+        }
+    }
+
+    /*
+     * Check CDI Support
+     */
+    async checkCDI(): Promise<void> {
+        for (let i = 0; i < this.crdList.length; i++) {
+            if(this.crdList[i].metadata["name"] == this.myConstants.ContainerizedDataImporter) {
+                this.cdiCheck = true;
             }
         }
     }

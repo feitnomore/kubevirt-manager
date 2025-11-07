@@ -25,6 +25,7 @@ import { ClusterRoleBinding } from 'src/app/interfaces/cluster-role-binding';
 import { FirewallLabels } from 'src/app/models/firewall-labels.model';
 import { FormGroup, FormBuilder, FormArray } from '@angular/forms';
 import { Config } from 'datatables.net';
+import { Constants } from 'src/app/constants';
 
 @Component({
   selector: 'app-kcluster',
@@ -33,6 +34,9 @@ import { Config } from 'datatables.net';
 })
 export class KClusterComponent implements OnInit {
 
+    myConstants!: Constants;
+    crdList: any;
+    cdiCheck: boolean = false;
     clusterList: KCluster[] = [];
     clusterImageList: any;
     cniList: any;
@@ -93,7 +97,10 @@ export class KClusterComponent implements OnInit {
         if(navTitle != null) {
             navTitle.replaceChildren("Kubernetes Clusters");
         }
+        this.myConstants = new Constants();
         await this.getClusters();
+        await this.loadCrds();
+        await this.checkCDI();
         this.kclusterList_dtTrigger.next(null);
         this.ctrlPlaneAnnotationList = this.fb.group({
             ctrlannotations: this.fb.array([]),
@@ -1271,26 +1278,26 @@ export class KClusterComponent implements OnInit {
         }
 
         /* Load other labels */
-        let clusterNameLabel = { 'kubevirt-manager.io/cluster-name': name };
+        let clusterNameLabel = { [this.myConstants.KubevirtManagerCluster]: name };
         Object.assign(tmpLabels, clusterNameLabel);
         Object.assign(tmpctrlLabels, clusterNameLabel);
 
-        let kubevirtManagerLabel = { 'kubevirt-manager.io/managed': "true" };
+        let kubevirtManagerLabel = { [this.myConstants.KubevirtManagerManaged]: "true" };
         Object.assign(tmpLabels, kubevirtManagerLabel);
         Object.assign(tmpctrlLabels, kubevirtManagerLabel);
 
-        let clusterAutoscalerLabel = { 'capk.kubevirt-manager.io/autoscaler': clusterautoscaler };
+        let clusterAutoscalerLabel = { [this.myConstants.KubevirtManagerClusterAutoscaler]: clusterautoscaler };
         Object.assign(tmpLabels, clusterAutoscalerLabel);
 
         if(cni.toLowerCase() != "manual") {
 
-            let thisCNILabel = { 'capk.kubevirt-manager.io/cni': cni };
+            let thisCNILabel = { [this.myConstants.KubevirtManagerClusterCni]: cni };
             Object.assign(tmpLabels, thisCNILabel);
 
-            let thisCNIVersionLabel = { 'capk.kubevirt-manager.io/cni-version': cniversion };
+            let thisCNIVersionLabel = { [this.myConstants.KubevirtManagerClusterCniVersion]: cniversion };
             Object.assign(tmpLabels, thisCNIVersionLabel);
 
-            let thisCNIVXLANPortLabel = { 'capk.kubevirt-manager.io/cni-vxlanport': clustercnivxlanport };
+            let thisCNIVXLANPortLabel = { [this.myConstants.KubevirtManagerClusterCniPort]: clustercnivxlanport };
             Object.assign(tmpLabels, thisCNIVXLANPortLabel);
         }
 
@@ -1404,11 +1411,11 @@ export class KClusterComponent implements OnInit {
         Object.assign(machineTemplateLabels, tmpLabels);
 
         /* Load other labels */
-        let clusterNameLabel = { 'kubevirt-manager.io/cluster-name': name };
+        let clusterNameLabel = { [this.myConstants.KubevirtManagerCluster]: name };
         Object.assign(tmpLabels, clusterNameLabel);
         Object.assign(machineTemplateLabels, clusterNameLabel);
 
-        let kubevirtManagerLabel = { 'kubevirt-manager.io/managed': "true" };
+        let kubevirtManagerLabel = { [this.myConstants.KubevirtManagerManaged]: "true" };
         Object.assign(tmpLabels, kubevirtManagerLabel);
 
         /* Load Annotations OPTIONAL */
@@ -1423,12 +1430,12 @@ export class KClusterComponent implements OnInit {
 
         
         /* Machine Labels */
-        Object.assign(machineTemplateLabels, { 'kubevirt-manager.io/cluster-name': name });
-        Object.assign(machineTemplateLabels, { 'kubevirt-manager.io/managed': "true" });
-        Object.assign(machineTemplateLabels, { 'capk.kubevirt-manager.io/flavor': controlplaneosdist });
-        Object.assign(machineTemplateLabels, { 'capk.kubevirt-manager.io/flavor-version': controlplaneosversion });
-        Object.assign(machineTemplateLabels, { 'capk.kubevirt-manager.io/kube-version' : version });
-        Object.assign(machineTemplateLabels, { 'kubevirt.io/domain': name + "-control-plane" });
+        Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtManagerCluster]: name });
+        Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtManagerManaged]: "true" });
+        Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtManagerClusterFlavor]: controlplaneosdist });
+        Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtManagerClusterFlavorVersion]: controlplaneosversion });
+        Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtManagerClusterKubernetesVersion] : version });
+        Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtDomain]: name + "-control-plane" });
         Object.assign(machineTemplateLabels, { [this.firewallLabels.Cluster]: name });
         Object.assign(machineTemplateLabels, { [this.firewallLabels.ClusterMasterPool]: name + "-control-plane" });
 
@@ -1718,27 +1725,27 @@ export class KClusterComponent implements OnInit {
         let machineTemplateLabels = {};
 
         /* KubeadmConfig Labe;s */
-        Object.assign(tmpLabels, { 'kubevirt-manager.io/cluster-name': name });
-        Object.assign(tmpLabels, { 'kubevirt-manager.io/managed': "true" });
+        Object.assign(tmpLabels, { [this.myConstants.KubevirtManagerCluster]: name });
+        Object.assign(tmpLabels, { [this.myConstants.KubevirtManagerManaged]: "true" });
 
         /* MachineDeployment Labels */
-        Object.assign(machineDeploymentLabels, { 'kubevirt-manager.io/cluster-name': name });
-        Object.assign(machineDeploymentLabels, { 'kubevirt-manager.io/managed': "true" });
-        Object.assign(machineDeploymentLabels, { 'capk.kubevirt-manager.io/autoscaler': clusterautoscaler });
+        Object.assign(machineDeploymentLabels, { [this.myConstants.KubevirtManagerCluster]: name });
+        Object.assign(machineDeploymentLabels, { [this.myConstants.KubevirtManagerManaged]: "true" });
+        Object.assign(machineDeploymentLabels, { [this.myConstants.KubevirtManagerClusterAutoscaler]: clusterautoscaler });
 
         /* MachineDeployment Annotations */
         if(clusterautoscaler == "true") {
-            Object.assign(machineDeploymentAnnotations, { 'cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size': nodepoolminreplicas });
-            Object.assign(machineDeploymentAnnotations, { 'cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size': nodepoolmaxreplicas });
+            Object.assign(machineDeploymentAnnotations, { [this.myConstants.KubevirtManagerClusterAutoscalerMin]: nodepoolminreplicas });
+            Object.assign(machineDeploymentAnnotations, { [this.myConstants.KubevirtManagerClusterAutoscalerMax]: nodepoolmaxreplicas });
         }
         
         /* Machine Labels */
-        Object.assign(machineTemplateLabels, { 'kubevirt-manager.io/cluster-name': name });
-        Object.assign(machineTemplateLabels, { 'kubevirt-manager.io/managed': "true" });
-        Object.assign(machineTemplateLabels, { 'capk.kubevirt-manager.io/flavor': nodepoolosdist });
-        Object.assign(machineTemplateLabels, { 'capk.kubevirt-manager.io/flavor-version': nodepoolosversion });
-        Object.assign(machineTemplateLabels, { 'capk.kubevirt-manager.io/kube-version' : version });
-        Object.assign(machineTemplateLabels, { 'kubevirt.io/domain': name + "-" + nodepoolname });
+        Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtManagerCluster]: name });
+        Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtManagerManaged]: "true" });
+        Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtManagerClusterFlavor]: nodepoolosdist });
+        Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtManagerClusterFlavorVersion]: nodepoolosversion });
+        Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtManagerClusterKubernetesVersion]: version });
+        Object.assign(machineTemplateLabels, { [this.myConstants.KubevirtDomain]: name + "-" + nodepoolname });
         Object.assign(machineTemplateLabels, { [this.firewallLabels.Cluster]: name });
         Object.assign(machineTemplateLabels, { [this.firewallLabels.ClusterWorkerPool]: name + "-" + nodepoolname });
 
@@ -2026,22 +2033,22 @@ export class KClusterComponent implements OnInit {
 
             /* Load other labels */
 
-            let thisLabel = { 'kubevirt-manager.io/cluster-name': clustername };
+            let thisLabel = { [this.myConstants.KubevirtManagerCluster]: clustername };
             Object.assign(tmpLabels, thisLabel);
 
-            let kubevirtManagerLabel = { 'kubevirt-manager.io/managed': "true" };
+            let kubevirtManagerLabel = { [this.myConstants.KubevirtManagerManaged]: "true" };
             Object.assign(tmpLabels, kubevirtManagerLabel);
 
             if(clustercni.toLowerCase() != "manual") {
 
                 checkData = true;
-                let thisCNILabel = { 'capk.kubevirt-manager.io/cni': clustercni };
+                let thisCNILabel = { [this.myConstants.KubevirtManagerClusterCni]: clustercni };
                 Object.assign(tmpLabels, thisCNILabel);
 
-                let thisCNIVersionLabel = { 'capk.kubevirt-manager.io/cni-version': clustercniversion };
+                let thisCNIVersionLabel = { [this.myConstants.KubevirtManagerClusterCniVersion]: clustercniversion };
                 Object.assign(tmpLabels, thisCNIVersionLabel);
 
-                let thisCNIVXLANPortLabel = { 'capk.kubevirt-manager.io/cni-vxlanport': clustercnivxlanport };
+                let thisCNIVXLANPortLabel = { [this.myConstants.KubevirtManagerClusterCniPort]: clustercnivxlanport };
                 Object.assign(tmpLabels, thisCNIVXLANPortLabel);
 
 
@@ -2138,8 +2145,8 @@ export class KClusterComponent implements OnInit {
                     spec: {
                         clusterSelector: {
                             matchLabels: {
-                                "kubevirt-manager.io/cluster-name": clustername,
-                                "capk.kubevirt-manager.io/cni": clustercni,
+                                [this.myConstants.KubevirtManagerCluster]: clustername,
+                                [this.myConstants.KubevirtManagerClusterCni]: clustercni,
                             }
                         },
                         resources: [
@@ -2177,12 +2184,12 @@ export class KClusterComponent implements OnInit {
         }
 
         /* Load labels */
-        let thisLabel = { 'kubevirt-manager.io/cluster-name': name };
+        let thisLabel = { [this.myConstants.KubevirtManagerCluster]: name };
         Object.assign(tmpLabels, thisLabel);
-        let kubevirtManagerLabel = { 'kubevirt-manager.io/managed': "true" };
+        let kubevirtManagerLabel = { [this.myConstants.KubevirtManagerManaged]: "true" };
         Object.assign(tmpLabels, kubevirtManagerLabel);
-        Object.assign(tmpLabels, { 'cluster.x-k8s.io/cluster-name': name });
-        Object.assign(tmpLabels, { 'capk.cluster.x-k8s.io/template-kind': "extra-resource" });
+        Object.assign(tmpLabels, { [this.myConstants.KubernetesClusterName]: name });
+        Object.assign(tmpLabels, { [this.myConstants.KubernetesCapkTemplateKind]: "extra-resource" });
 
         /* Service Account */
         let serviceAccount: ServiceAccount = {
@@ -2335,12 +2342,12 @@ export class KClusterComponent implements OnInit {
         }
 
         /* Load labels */
-        let thisLabel = { 'kubevirt-manager.io/cluster-name': name };
+        let thisLabel = { [this.myConstants.KubevirtManagerCluster]: name };
         Object.assign(tmpLabels, thisLabel);
-        let kubevirtManagerLabel = { 'kubevirt-manager.io/managed': "true" };
+        let kubevirtManagerLabel = { [this.myConstants.KubevirtManagerManaged]: "true" };
         Object.assign(tmpLabels, kubevirtManagerLabel);
-        Object.assign(tmpLabels, { 'cluster.x-k8s.io/cluster-name': name });
-        Object.assign(tmpLabels, { 'capk.cluster.x-k8s.io/template-kind': "extra-resource" });
+        Object.assign(tmpLabels, { [this.myConstants.KubernetesClusterName]: name });
+        Object.assign(tmpLabels, { [this.myConstants.KubernetesCapkTemplateKind]: "extra-resource" });
 
         /* Service Account */
         let serviceAccount: ServiceAccount = {
@@ -2879,6 +2886,29 @@ export class KClusterComponent implements OnInit {
         } else if (firmware == "bios") {
             if (secureBootValueField != null) {
                 secureBootValueField.setAttribute("disabled", "disabled");
+            }
+        }
+    }
+
+    /*
+     * Load CRDs
+     */
+    async loadCrds(): Promise<void> {
+        try {
+            const data = await lastValueFrom(this.k8sApisService.getCrds());
+            this.crdList = data.items;
+        } catch (e: any) {
+            this.crdList = [];
+        }
+    }
+
+    /*
+     * Check CDI Support
+     */
+    async checkCDI(): Promise<void> {
+        for (let i = 0; i < this.crdList.length; i++) {
+            if(this.crdList[i].metadata["name"] == this.myConstants.ContainerizedDataImporter) {
+                this.cdiCheck = true;
             }
         }
     }

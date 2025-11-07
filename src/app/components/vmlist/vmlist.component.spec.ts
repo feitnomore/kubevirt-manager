@@ -39,12 +39,6 @@ describe('VmlistComponent', () => {
     const contentValue = componentElem.nativeElement;
     expect(contentValue).toBeTruthy();
   });
-  it('should contain New Virtual Machine item', () => {
-    const componentDoc: DebugElement = fixture.debugElement;
-    const componentElem = componentDoc.query(By.css('.fa-plus-square'))
-    const contentValue = componentElem.nativeElement;
-    expect(contentValue).toBeTruthy();
-  });
   it('should contain Main Datatable', () => {
     const componentDoc: DebugElement = fixture.debugElement;
     const componentElem = componentDoc.nativeElement;

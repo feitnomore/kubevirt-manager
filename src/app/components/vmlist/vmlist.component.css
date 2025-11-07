@@ -1,1 +1,30 @@
+.autocomplete-container {
+    position: relative;
+}
+.suggestions-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: absolute;
+    top: 100%; 
+    left: 0;
+    right: 0;
+    z-index: 100;
+    border: 1px solid #ccc;
+    background: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-height: 300px; /* Max window height for suggestions */
+    overflow-y: auto;
+}
 
+.suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.suggestion-item:hover {
+    background-color: #f0f0f0;
+}

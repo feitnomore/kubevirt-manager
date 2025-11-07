@@ -7,6 +7,7 @@ import { XK8sService } from 'src/app/services/x-k8s.service';
 import { KClusterMachineDeployment } from 'src/app/models/kcluster-machine-deployment.model';
 import { KClusterKubevirtMachineTemplate } from 'src/app/models/kcluster-kubevirt-machine-template.model';
 import { KubeVirtService } from 'src/app/services/kube-virt.service';
+import { Constants } from 'src/app/constants';
 
 @Component({
   selector: 'app-kcluster-pool-details',
@@ -14,6 +15,8 @@ import { KubeVirtService } from 'src/app/services/kube-virt.service';
   styleUrls: ['./kcluster-pool-details.component.css']
 })
 export class KClusterPoolDetailsComponent implements OnInit {
+
+    myConstants!: Constants;
     poolName: string = "";
     poolNamespace: string = "";
     poolNetwork = {
@@ -78,6 +81,7 @@ export class KClusterPoolDetailsComponent implements OnInit {
         if(navTitle != null) {
             navTitle.replaceChildren("Kubernetes Cluster - Pool Details");
         }
+        this.myConstants = new Constants();
         await this.loadPoolDetails();
         await this.loadWorkerPoolsVMs();
     }
@@ -107,7 +111,7 @@ export class KClusterPoolDetailsComponent implements OnInit {
         thisWorkerPool.phase = thisWorker.status.phase;
 
         try {
-            if(thisWorker.metadata.labels["capk.kubevirt-manager.io/autoscaler"] == "true") {
+            if(thisWorker.metadata.labels[this.myConstants.KubevirtManagerClusterAutoscaler] == "true") {
                 this.hasClusterAutoscaler = true;
             }
         } catch (e) {
@@ -117,8 +121,8 @@ export class KClusterPoolDetailsComponent implements OnInit {
 
         if(this.hasClusterAutoscaler) {
             try {
-                thisWorkerPool.minReplicas = Number(thisWorker.metadata.annotations["cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size"]);
-                thisWorkerPool.maxReplicas = Number(thisWorker.metadata.annotations["cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size"]);               
+                thisWorkerPool.minReplicas = Number(thisWorker.metadata.annotations[this.myConstants.KubevirtManagerClusterAutoscalerMin]);
+                thisWorkerPool.maxReplicas = Number(thisWorker.metadata.annotations[this.myConstants.KubevirtManagerClusterAutoscalerMax]);               
             } catch (e) {
                 this.hasClusterAutoscaler = false;
                 console.log(e);
@@ -277,7 +281,7 @@ export class KClusterPoolDetailsComponent implements OnInit {
                 }
                 try {
                     if(vms[i].spec.template.spec.nodeSelector) {
-                        currentVm.nodeSel = vms[i].spec.template.spec.nodeSelector["kubernetes.io/hostname"];
+                        currentVm.nodeSel = vms[i].spec.template.spec.nodeSelector[this.myConstants.KubernetesHostname];
                     } else {
                         currentVm.nodeSel = "auto-select";
                     }
