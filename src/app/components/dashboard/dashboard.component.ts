@@ -745,7 +745,7 @@ export class DashboardComponent implements OnInit {
       }
 
       if(this.cdiCheck == false) {
-        alert('CDI not found. CDI is a required component for this solution!')
+        alert('CDI (Containerized Data Importer) not found!\nThis component is required for disk and volume operations. Please visit KubeVirt website for installation instructions.')
       }
     }
 
