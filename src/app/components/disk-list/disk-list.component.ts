@@ -8,6 +8,7 @@ import { K8sApisService } from 'src/app/services/k8s-apis.service';
 import { K8sService } from 'src/app/services/k8s.service';
 import { DataVolume } from 'src/app/interfaces/data-volume';
 import { Config } from 'datatables.net';
+import { Toasts } from 'src/app/classes/toasts';
 
 @Component({
   selector: 'app-disk-list',
@@ -16,10 +17,14 @@ import { Config } from 'datatables.net';
 })
 export class DiskListComponent implements OnInit {
 
+    pageName: string = "Data Volumes";
+
     nodeList: K8sNode[] = [];
     diskList: VMDisk[] = [];
     storageClassesList: string[] = [];
     namespacesList: string[] = [];
+
+    myToasts!: Toasts;
 
     /*
      * Dynamic Tables
@@ -48,8 +53,9 @@ export class DiskListComponent implements OnInit {
     async ngOnInit(): Promise<void> {
         let navTitle = document.getElementById("nav-title");
         if(navTitle != null) {
-            navTitle.replaceChildren("Virtual Machine Data Volumes");
+            navTitle.replaceChildren(this.pageName);
         }
+        this.myToasts = new Toasts();
         await this.getDVs();
         await this.getStorageClasses();
         this.diskList_dtTrigger.next(null);
@@ -83,7 +89,7 @@ export class DiskListComponent implements OnInit {
             const data = await lastValueFrom(this.k8sService.getNamespaces());
             let nss = data.items;
             for (let i = 0; i < nss.length; i++) {
-            this.namespacesList.push(nss[i].metadata["name"]);
+                this.namespacesList.push(nss[i].metadata["name"]);
             }
         } catch (e: any) {
             console.log(e);
@@ -180,9 +186,10 @@ export class DiskListComponent implements OnInit {
                     let newSize = diskSize.trim() + "Gi";
                     const data = await lastValueFrom(this.k8sService.resizePersistentVolumeClaims(diskNamespace, diskName, newSize));
                     this.hideComponent("modal-resize");
+                    this.myToasts.toastSuccess(this.pageName, "", "Edited Data Volume: " + diskName);
                     this.fullReload();
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
                 }
             }
@@ -317,9 +324,10 @@ export class DiskListComponent implements OnInit {
             try {
                 const data = await lastValueFrom(this.dataVolumesService.createDataVolume(thisDv));
                 this.hideComponent("modal-new");
+                this.myToasts.toastSuccess(this.pageName, "", "Created Data Volume: " + diskName);
                 this.fullReload();
             } catch (e: any) {
-                alert(e.error.message);
+                this.myToasts.toastError(this.pageName, "", e.message);
                 console.log(e);
             }
         }
@@ -373,9 +381,10 @@ export class DiskListComponent implements OnInit {
                     }
                     let deleteDataVolume = await lastValueFrom(this.dataVolumesService.deleteDataVolume(diskNamespace, diskName));
                     this.hideComponent("modal-delete");
+                    this.myToasts.toastSuccess(this.pageName, "", "Deleted Data Volume: " + diskName);
                     this.fullReload();
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
                 }
             }

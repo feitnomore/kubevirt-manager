@@ -10,6 +10,8 @@ import { lastValueFrom } from 'rxjs';
 })
 export class NodelistComponent implements OnInit {
 
+    pageName: string = "Nodes";
+
     nodeList: K8sNode[] = []
 
     constructor(
@@ -19,7 +21,7 @@ export class NodelistComponent implements OnInit {
     async ngOnInit(): Promise<void> {
         let navTitle = document.getElementById("nav-title");
         if(navTitle != null) {
-            navTitle.replaceChildren("Nodes");
+            navTitle.replaceChildren(this.pageName);
         }
         await this.getNodes();
     }

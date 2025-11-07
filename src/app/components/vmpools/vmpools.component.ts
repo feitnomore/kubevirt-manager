@@ -15,7 +15,8 @@ import { FirewallLabels } from 'src/app/models/firewall-labels.model';
 import { FormGroup, FormArray, FormBuilder } from '@angular/forms';
 import { KubeVirtClusterInstanceType } from 'src/app/models/kube-virt-clusterinstancetype';
 import { Config } from 'datatables.net';
-import { Constants } from 'src/app/constants';
+import { Constants } from 'src/app/classes/constants';
+import { Toasts } from 'src/app/classes/toasts';
 
 @Component({
   selector: 'app-vmpools',
@@ -24,7 +25,10 @@ import { Constants } from 'src/app/constants';
 })
 export class VMPoolsComponent implements OnInit {
 
+    pageName: string = "Virtual Machine Pools";
+
     myConstants!: Constants;
+    myToasts!: Toasts;
     crdList: any;
     poolList: KubeVirtVMPool[] = [];
     namespaceList: string[] = [];
@@ -88,9 +92,10 @@ export class VMPoolsComponent implements OnInit {
     async ngOnInit(): Promise<void> {
         let navTitle = document.getElementById("nav-title");
         if(navTitle != null) {
-            navTitle.replaceChildren("Virtual Machine Pools");
+            navTitle.replaceChildren(this.pageName);
         }
         this.myConstants = new Constants();
+        this.myToasts = new Toasts();
         await this.loadCrds();
         await this.getClusterInstanceTypes();
         await this.getPools();
@@ -760,8 +765,8 @@ export class VMPoolsComponent implements OnInit {
                                 break;
                         }
                     } catch (e: any) {
-                        alert(e.error.message);
-                        console.log(e.error.message);
+                        this.myToasts.toastError(this.pageName, "", e.message)
+                        console.log(e);
                         throw new Error("Error loading disk" + i + " image data!");
                     }
                     if(actualDisk.diskCacheMode != "") {
@@ -815,8 +820,8 @@ export class VMPoolsComponent implements OnInit {
                         cloudconfig += "ssh_authorized_keys:\n";
                         cloudconfig += "  - " + atob(sshKey) + "\n";
                     } catch (e: any) {
-                        alert(e.error.message);
-                        console.log(e.error.message);
+                        this.myToasts.toastError(this.pageName, "", e.message);
+                        console.log(e);
                     }
                 }
             } else {
@@ -979,9 +984,10 @@ export class VMPoolsComponent implements OnInit {
             try {
                 let data = await lastValueFrom(this.kubeVirtService.createPool(thisVirtualMachinePool));
                 this.hideComponent("modal-newpool");
+                this.myToasts.toastSuccess(this.pageName, "", "Created Virtual Machine Pool: " + newpoolname);
                 this.fullReload();
             } catch (e: any) {
-                alert(e.error.message);
+                this.myToasts.toastError(this.pageName, "", e.message);
                 console.log(e);
             }
         }
@@ -1009,15 +1015,19 @@ export class VMPoolsComponent implements OnInit {
     async vmOperations(vmOperation: string, vmNamespace: string, vmName: string): Promise<void> {
         if(vmOperation == "start"){
             var data = await lastValueFrom(this.kubeVirtService.startVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Started: " + vmName);
             this.fullReload();
         } else if (vmOperation == "stop") {
             var data = await lastValueFrom(this.kubeVirtService.stopVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Stopped: " + vmName);
             this.fullReload();
         } else if (vmOperation == "reboot"){
             var data = await lastValueFrom(this.kubeVirtService.restartVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Restared: " + vmName);
             this.fullReload();
         } else if (vmOperation == "delete") {
             const data = await lastValueFrom(this.kubeVirtService.deleteVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Deleted: " + vmName);
             this.fullReload();
         }
     }
@@ -1030,7 +1040,7 @@ export class VMPoolsComponent implements OnInit {
             const data = await lastValueFrom(this.kubeVirtService.removeVmFromPool(vmNamespace, vmName, vmNode));
             this.fullReload();
         } catch (e: any) {
-            alert(e.error.message);
+            this.myToasts.toastError(this.pageName, "", e.message);
             console.log(e);
         }
     }
@@ -1041,12 +1051,15 @@ export class VMPoolsComponent implements OnInit {
     async poolOperations(poolOperation: string, poolNamespace: string, poolName: string): Promise<void> {
         if(poolOperation == "start"){
             var data = await lastValueFrom(this.kubeVirtService.startPool(poolNamespace, poolName));
+            this.myToasts.toastSuccess(this.pageName, "", "Started Pool: " + poolName);
             this.fullReload();
         } else if (poolOperation == "stop") {
             var data = await lastValueFrom(this.kubeVirtService.stopPool(poolNamespace, poolName));
+            this.myToasts.toastSuccess(this.pageName, "", "Stopped Pool: " + poolName);
             this.fullReload();
         } else if (poolOperation == "delete") {
             const data = await lastValueFrom(this.kubeVirtService.deletePool(poolNamespace, poolName));
+            this.myToasts.toastSuccess(this.pageName, "", "Deleted Pool: " + poolName);
             this.fullReload();
         }
     }
@@ -1091,9 +1104,10 @@ export class VMPoolsComponent implements OnInit {
                 try {
                     const data = await lastValueFrom(this.kubeVirtService.scalePoolReplicas(poolNamespace, poolName, replicasSize));
                     this.hideComponent("modal-resize");
+                    this.myToasts.toastSuccess(this.pageName, "", "Edited Virtual Machine Pool: " + poolName);
                     this.fullReload();
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
                 }
             }
@@ -1141,9 +1155,10 @@ export class VMPoolsComponent implements OnInit {
                 try {
                     const data = await lastValueFrom(this.kubeVirtService.deletePool(poolNamespace, poolName));
                     this.hideComponent("modal-delete");
+                    this.myToasts.toastSuccess(this.pageName, "", "Deleted Virtual Machine Pool: " + poolName);
                     this.fullReload();
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
                 }
             }
@@ -1191,9 +1206,10 @@ export class VMPoolsComponent implements OnInit {
                 try {
                     const data = await lastValueFrom(this.kubeVirtService.deleteVm(vmNamespace, vmName));
                     this.hideComponent("modal-deletevm");
+                    this.myToasts.toastSuccess(this.pageName, "", "Deleted Virtual Machine: " + vmName);
                     this.fullReload();
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
                 }
             }
@@ -1252,9 +1268,10 @@ export class VMPoolsComponent implements OnInit {
                 try {
                     const data = await lastValueFrom(this.kubeVirtService.scalePool(resizeNamespace, resizeName, cores, threads, sockets, memory));
                     this.hideComponent("modal-resize");
+                    this.myToasts.toastSuccess(this.pageName, "", "Edited Virtual Machine Pool: " + resizeName);
                     this.fullReload();
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
                 }
             }
@@ -1311,9 +1328,10 @@ export class VMPoolsComponent implements OnInit {
                 try {
                     const data = await lastValueFrom(this.kubeVirtService.changePoolType(poolNamespace, poolName, poolType));
                     this.hideComponent("modal-type");
+                    this.myToasts.toastSuccess(this.pageName, "", "Edited Virtual Machine Pool: " + poolName);
                     this.fullReload();
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
                 }
             }
@@ -1397,7 +1415,7 @@ export class VMPoolsComponent implements OnInit {
                 storageSelectorOptions += "<option value=" + data.items[i].metadata["name"] +">" + data.items[i].metadata["name"] + "</option>\n";
             }
         } catch (e: any) {
-            console.log(e.error.message);
+            console.log(e);
         }
 
         let diskStorageClassField = document.getElementById("diskStorageClass-" + frmIndex.toString());
@@ -1701,7 +1719,7 @@ export class VMPoolsComponent implements OnInit {
                 imgSelectorOptions += "<option value=" + images[i].metadata["name"] +">" + images[i].metadata["name"] + "</option>\n";
             }
         } catch (e: any) {
-            console.log(e.error.message);
+            console.log(e);
         }
         return imgSelectorOptions;
     }
@@ -1737,6 +1755,10 @@ export class VMPoolsComponent implements OnInit {
             if(this.crdList[i].metadata["name"] == this.myConstants.ContainerizedDataImporter) {
                 this.cdiCheck = true;
             }
+        }
+
+        if(this.cdiCheck == false) {
+            this.myToasts.toastError(this.pageName, "", "CDI (Containerized Data Importer) not found! This component is required for disk and volume operations. Please visit KubeVirt website for installation instructions.");
         }
     }
 

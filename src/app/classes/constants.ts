@@ -37,6 +37,12 @@ export class Constants {
     public readonly KubevirtManagerClusterFlavorVersion: string = "capk.kubevirt-manager.io/flavor-version";
     public readonly KubevirtManagerClusterKubernetesVersion: string = "capk.kubevirt-manager.io/kube-version";
 
+    /* Toasts  Duration MS */
+    public readonly ToastErrorDuration: number = 40000;
+    public readonly ToastWarningDuration: number = 20000;
+    public readonly ToastInfoDuration: number = 15000;
+    public readonly ToastSuccessDuration: number = 10000;
+
     public readonly cloudInitNetworks: string[] = [
         'eth0',
         'eth1',

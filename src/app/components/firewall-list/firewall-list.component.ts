@@ -15,6 +15,8 @@ import { K8sService } from 'src/app/services/k8s.service';
 })
 export class FirewallListComponent implements OnInit {
 
+    pageName: string = "Firewall";
+
     namespacesList: string[] = [];
     firewallRuleList: FirewallRule[] = [];
     firewallLabels: FirewallLabels = new FirewallLabels;
@@ -29,7 +31,7 @@ export class FirewallListComponent implements OnInit {
     async ngOnInit(): Promise<void> {
         let navTitle = document.getElementById("nav-title");
         if(navTitle != null) {
-            navTitle.replaceChildren("Firewall Policies");
+            navTitle.replaceChildren(this.pageName);
         }
         await this.getNamespaces();
         await this.loadRules();

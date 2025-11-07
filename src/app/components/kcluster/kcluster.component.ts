@@ -25,7 +25,8 @@ import { ClusterRoleBinding } from 'src/app/interfaces/cluster-role-binding';
 import { FirewallLabels } from 'src/app/models/firewall-labels.model';
 import { FormGroup, FormBuilder, FormArray } from '@angular/forms';
 import { Config } from 'datatables.net';
-import { Constants } from 'src/app/constants';
+import { Constants } from 'src/app/classes/constants';
+import { Toasts } from 'src/app/classes/toasts';
 
 @Component({
   selector: 'app-kcluster',
@@ -34,7 +35,10 @@ import { Constants } from 'src/app/constants';
 })
 export class KClusterComponent implements OnInit {
 
+    pageName: string = "Kubernetes Clusters";
+
     myConstants!: Constants;
+    myToasts!: Toasts;
     crdList: any;
     cdiCheck: boolean = false;
     clusterList: KCluster[] = [];
@@ -95,9 +99,10 @@ export class KClusterComponent implements OnInit {
     async ngOnInit(): Promise<void> {
         let navTitle = document.getElementById("nav-title");
         if(navTitle != null) {
-            navTitle.replaceChildren("Kubernetes Clusters");
+            navTitle.replaceChildren(this.pageName);
         }
         this.myConstants = new Constants();
+        this.myToasts = new Toasts();
         await this.getClusters();
         await this.loadCrds();
         await this.checkCDI();
@@ -208,12 +213,6 @@ export class KClusterComponent implements OnInit {
         }
         return true;
     }
-
-
-
-
-
-
 
     /* Getting the Annotations FormArray */
     get annotations(): FormArray {
@@ -593,10 +592,11 @@ export class KClusterComponent implements OnInit {
                 try {
                     let clusterData = await lastValueFrom(this.xK8sService.deleteCluster(clusterNamespace, clusterName));
                     this.hideComponent("modal-delete");
+                    this.myToasts.toastSuccess(this.pageName, "", "Deleted Cluster: " + clusterName);
                     this.fullReload();
                 } catch (e: any) {
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
-                    alert(e.error.message);
                 }
             }
         }
@@ -1007,10 +1007,11 @@ export class KClusterComponent implements OnInit {
                 }
 
                 this.hideComponent("modal-newcluster");
+                this.myToasts.toastSuccess(this.pageName, "", "Created Cluster: " + clustername);
                 this.fullReload();
             } catch (e: any) {
+                this.myToasts.toastError(this.pageName, "", e.message);
                 console.log(e);
-                alert(e.error.message);
             }
         }
 
@@ -1212,10 +1213,11 @@ export class KClusterComponent implements OnInit {
                 this.loadKubevirtCloudControllerManager(clusternamespace, clustername);
 
                 this.hideComponent("modal-newclustercustom");
+                this.myToasts.toastSuccess(this.pageName, "", "Created Cluster: " + clustername);
                 this.fullReload();
             } catch (e: any) {
+                this.myToasts.toastError(this.pageName, "", e.message);
                 console.log(e);
-                alert(e.error.message);
             }
         }
 
@@ -1363,8 +1365,8 @@ export class KClusterComponent implements OnInit {
             let data = await lastValueFrom(this.xK8sService.createCluster(cluster));
             data = await lastValueFrom(this.xK8sService.createKubevirtCluster(kubevirtCluster));
         } catch (e: any) {
+            this.myToasts.toastError(this.pageName, "", e.message);
             console.log(e);
-            alert(e.error.message);
         }
 
     }
@@ -1663,7 +1665,7 @@ export class KClusterComponent implements OnInit {
             let data = await lastValueFrom(this.xK8sService.createKubeadmControlPlane(kubeadmControlPlane));
             data = await lastValueFrom(this.xK8sService.createKubevirtMachineTemplate(kubevirtMachineTemplate));
         } catch (e: any) {
-            alert(e.error.message);
+            this.myToasts.toastError(this.pageName, "", e.message);
             console.log(e);
         }
     }
@@ -1998,8 +2000,8 @@ export class KClusterComponent implements OnInit {
             data = await lastValueFrom(this.xK8sService.createKubeadmConfigTemplate(kubeadmConfigTemplate));
             data = await lastValueFrom(this.xK8sService.createMachineDeployment(machineDeployment));
         } catch (e: any) {
+            this.myToasts.toastError(this.pageName, "", e.message);
             console.log(e);
-            alert(e.error.message);
         }
     }
 
@@ -2910,6 +2912,10 @@ export class KClusterComponent implements OnInit {
             if(this.crdList[i].metadata["name"] == this.myConstants.ContainerizedDataImporter) {
                 this.cdiCheck = true;
             }
+        }
+
+        if(this.cdiCheck == false) {
+            this.myToasts.toastError(this.pageName, "", "CDI (Containerized Data Importer) not found! This component is required for disk and volume operations. Please visit KubeVirt website for installation instructions.");
         }
     }
 

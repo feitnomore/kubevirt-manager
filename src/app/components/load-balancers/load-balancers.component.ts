@@ -9,7 +9,8 @@ import { Services } from 'src/app/interfaces/services';
 import { ServicesPort } from 'src/app/interfaces/services-port';
 import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
 import { Config } from 'datatables.net';
-import { Constants } from 'src/app/constants';
+import { Constants } from 'src/app/classes/constants';
+import { Toasts } from 'src/app/classes/toasts';
 
 @Component({
   selector: 'app-load-balancers',
@@ -18,7 +19,10 @@ import { Constants } from 'src/app/constants';
 })
 export class LoadBalancersComponent implements OnInit {
 
+    pageName: string = "Load Balancers";
+
     myConstants!: Constants;
+    myToasts!: Toasts;
     loadBalancerList: LoadBalancer[] = [];
     charDot = '.';
 
@@ -66,7 +70,7 @@ export class LoadBalancersComponent implements OnInit {
     async ngOnInit(): Promise<void> {
         let navTitle = document.getElementById("nav-title");
         if(navTitle != null) {
-            navTitle.replaceChildren("Load Balancers");
+            navTitle.replaceChildren(this.pageName);
         }
         this.portList = this.fb.group({
             ports: this.fb.array([this.createPortGroup()]),
@@ -78,6 +82,7 @@ export class LoadBalancersComponent implements OnInit {
             labels: this.fb.array([]),
         });
         this.myConstants = new Constants();
+        this.myToasts = new Toasts();
         await this.getLoadBalancers();
         this.lbList_dtTrigger.next(null);
     }
@@ -390,9 +395,10 @@ export class LoadBalancersComponent implements OnInit {
                 try {
                     let deleteService = await lastValueFrom(this.k8sService.deleteService(lbNamespace, lbName));
                     this.hideComponent("modal-delete");
+                    this.myToasts.toastSuccess(this.pageName, "", "Deleted Load Balancer: " + lbName);
                     this.fullReload();
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
                 }
             }
@@ -439,9 +445,10 @@ export class LoadBalancersComponent implements OnInit {
                 try {
                     let newTypeData = await lastValueFrom(this.k8sService.changeServiceType(lbNamespace, lbName, newType));
                     this.hideComponent("modal-type");
+                    this.myToasts.toastSuccess(this.pageName, "", "Edited Load Balancer: " + lbName);
                     this.fullReload();
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
                 }
             }
@@ -587,9 +594,10 @@ export class LoadBalancersComponent implements OnInit {
             try {
                 let newLbData = await lastValueFrom(this.k8sService.createService(myService));
                 this.hideComponent("modal-new");
+                this.myToasts.toastSuccess(this.pageName, "", "Created Load Balancer: " + newlbname);
                 this.fullReload();
             } catch (e: any) {
-                alert(e.error.message);
+                this.myToasts.toastError(this.pageName, "", e.message);
                 console.log(e);
             }
         }

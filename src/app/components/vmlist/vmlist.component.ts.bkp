@@ -43,8 +43,6 @@ export class VmlistComponent implements OnInit {
     firewallLabels: FirewallLabels = new FirewallLabels;
 
     showSuggestions: boolean = false;
-    enableCloudInit: boolean = false;
-    enableCloudInitNetwork: boolean = false;
 
     /*
      * Dynamic Forms
@@ -667,8 +665,6 @@ export class VmlistComponent implements OnInit {
         newvmnamespace: string,
         newvmnode: string,
         newvmrunstrategy: string,
-        newvmenablecloudinit: string,
-        newvmcloudinitdriver: string,
         newvmtype: string,
         newvmcpumemsockets: string,
         newvmcpumemcores: string,
@@ -1018,12 +1014,10 @@ export class VmlistComponent implements OnInit {
             }
 
             /* Adding UserData/NetworkData device */
-            if (newvmenablecloudinit == "True") {
-                let diskUserData = {'name': "disk" + this.disks.length.toString(), 'disk': {'bus': newvmcloudinitdriver}};
-                let deviceUserData = {'name': "disk" + this.disks.length.toString(), 'cloudInitNoCloud': {'userData': cloudconfig, 'networkData': netconfig}};
-                volumes.push(deviceUserData);
-                disks.push(diskUserData);
-            }
+            let diskUserData = {'name': "disk" + this.disks.length.toString(), 'disk': {'bus': "virtio"}};
+            let deviceUserData = {'name': "disk" + this.disks.length.toString(), 'cloudInitNoCloud': {'userData': cloudconfig, 'networkData': netconfig}};
+            volumes.push(deviceUserData);
+            disks.push(diskUserData);
         
             /* NICs Setup */
             let thisNICList = this.getNics();
@@ -1474,7 +1468,6 @@ export class VmlistComponent implements OnInit {
         }
         if (netData != null && frmIndex == 0) {
             netData.setAttribute("style","display: none;");
-            this.enableCloudInitNetwork = false;
         }
     }
 
@@ -1505,35 +1498,6 @@ export class VmlistComponent implements OnInit {
             selectorSSHKey.innerHTML = "";
             selectorAuthType.innerHTML = authOptions;
             this.onChangeAuthType("password", namespace);
-        }
-    }
-
-    /*
-     * New VM: Enable/Disable Cloud Init
-     */
-    async onChangeCloudInit(selectorValue: string) {
-        let selectorDriver = document.getElementById("newvm-cloudinitdriver");
-        let tabUserData = document.getElementById("newvm-userdata-tab");
-        let tabNetData = document.getElementById("newvm-netdata-tab");
-        
-        if(selectorDriver != null && tabUserData != null) {
-            if(selectorValue == "True") {
-                this.enableCloudInit = true;
-                selectorDriver.removeAttribute("disabled");
-                tabUserData.setAttribute("style","display: flex;");
-                if(this.enableCloudInitNetwork == true && tabNetData != null)
-                {
-                    tabNetData.setAttribute("style","display: flex;");
-                }
-            } else if (selectorValue == "False") {
-                this.enableCloudInit = false;
-                selectorDriver.setAttribute("disabled", "disabled");
-                tabUserData.setAttribute("style","display: none;");
-                if(tabNetData != null)
-                {
-                    tabNetData.setAttribute("style","display: none;");
-                }
-            }
         }
     }
 
@@ -1618,15 +1582,14 @@ export class VmlistComponent implements OnInit {
             let selectorNetworkTypeField = document.getElementById("networkType-" + frmIndex.toString());
             let networkTypeSelectorOptions = "<option selected></option>\n<option value=bridge>bridge</option>\n";
             if(frmIndex == 0) {
-                if(netData != null && thisNetwork.toLowerCase() != "podnetwork" && this.enableCloudInit == true) {
+                if(netData != null && thisNetwork.toLowerCase() != "podnetwork") {
                     networkTypeSelectorOptions += "<option value=macvtap>macvtap</option>\n";
                     netData.setAttribute("style","display: flex;");
-                    this.enableCloudInitNetwork = true;
+
                 } else {
                     networkTypeSelectorOptions += "<option value=masquerade>masquerade</option>\n";
                     if(netData != null && thisNetwork.toLowerCase() == "podnetwork") {
                         netData.setAttribute("style","display: none;");
-                        this.enableCloudInitNetwork = false;
                     }
                 }
 

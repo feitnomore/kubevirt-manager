@@ -5,6 +5,7 @@ import { KubeVMClusterInstanceType } from 'src/app/models/kube-vmcluster-instanc
 import { KubeVirtService } from 'src/app/services/kube-virt.service';
 import { VirtualMachineClusterInstanceType } from 'src/app/interfaces/virtual-machine-cluster-instance-type'
 import { Config } from 'datatables.net';
+import { Toasts } from 'src/app/classes/toasts';
 
 @Component({
   selector: 'app-cluster-instance-type-list',
@@ -13,7 +14,10 @@ import { Config } from 'datatables.net';
 })
 export class ClusterInstanceTypeListComponent implements OnInit {
 
+    pageName: string = "Cluster Instance Types";
+
     clusterInstanceTypeList: KubeVMClusterInstanceType [] = [];
+    myToasts!: Toasts;
 
     /*
      * Dynamic Tables
@@ -40,8 +44,9 @@ export class ClusterInstanceTypeListComponent implements OnInit {
     async ngOnInit(): Promise<void> {
         let navTitle = document.getElementById("nav-title");
         if(navTitle != null) {
-            navTitle.replaceChildren("Cluster Instance Types");
+            navTitle.replaceChildren(this.pageName);
         }
+        this.myToasts = new Toasts();
         await this.getClusterInstanceTypes();
         this.citList_dtTrigger.next(null);
     }
@@ -103,9 +108,10 @@ export class ClusterInstanceTypeListComponent implements OnInit {
                 try {
                     const data = await lastValueFrom(this.kubeVirtService.editClusterInstanceType(typeName, cpuSize, memorySize));
                     this.hideComponent("modal-edit");
+                    this.myToasts.toastSuccess(this.pageName, "", "Edited Instance Type: " + typeName);
                     this.fullReload(); 
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
                 }
             }
@@ -149,9 +155,10 @@ export class ClusterInstanceTypeListComponent implements OnInit {
                 try {
                     const data = await lastValueFrom(await this.kubeVirtService.deleteClusterInstanceType(typeName));
                     this.hideComponent("modal-delete");
+                    this.myToasts.toastSuccess(this.pageName, "", "Deleted Instance Type: " + typeName);
                     this.fullReload(); 
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
                 }
             }
@@ -199,9 +206,10 @@ export class ClusterInstanceTypeListComponent implements OnInit {
             try {
                 const data = await lastValueFrom(this.kubeVirtService.createClusterInstanceType(myCITTemplate));
                 this.hideComponent("modal-new");
+                this.myToasts.toastSuccess(this.pageName, "", "Created Instance Type: " + typeName);
                 this.fullReload(); 
             } catch (e: any) {
-                alert(e.error.message);
+                this.myToasts.toastError(this.pageName, "", e.message);
                 console.log(e);
             }
         } else {

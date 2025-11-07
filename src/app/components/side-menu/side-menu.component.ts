@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
 import { K8sApisService } from 'src/app/services/k8s-apis.service';
-import { Constants } from 'src/app/constants';
+import { Constants } from 'src/app/classes/constants';
 
 @Component({
   selector: 'app-side-menu',

@@ -7,7 +7,8 @@ import { KubeVirtService } from 'src/app/services/kube-virt.service';
 import { PrometheusService } from 'src/app/services/prometheus.service';
 import { Chart } from 'chart.js/auto'
 import { XK8sService } from 'src/app/services/x-k8s.service';
-import { Constants } from 'src/app/constants';
+import { Constants } from 'src/app/classes/constants';
+import { Toasts } from 'src/app/classes/toasts';
 
 @Component({
   selector: 'app-dashboard',
@@ -16,9 +17,12 @@ import { Constants } from 'src/app/constants';
 })
 export class DashboardComponent implements OnInit {
 
+    pageName: string = "Dashboard";
+
     crdList: any;
     cdiCheck: boolean = false;
     myConstants!: Constants;
+    myToasts!: Toasts;
 
     nodeInfo = {
         'total': 0,
@@ -76,9 +80,10 @@ export class DashboardComponent implements OnInit {
     async ngOnInit(): Promise<void> {
         let navTitle = document.getElementById("nav-title");
         if(navTitle != null) {
-            navTitle.replaceChildren("Dashboard");
+            navTitle.replaceChildren(this.pageName);
         }
         this.myConstants = new Constants();
+        this.myToasts = new Toasts();
         await this.getNodes();   // Needed to calculate CPU Graph
         await this.loadCrds();
         await this.checkCDI();
@@ -745,7 +750,7 @@ export class DashboardComponent implements OnInit {
       }
 
       if(this.cdiCheck == false) {
-        alert('CDI (Containerized Data Importer) not found!\nThis component is required for disk and volume operations. Please visit KubeVirt website for installation instructions.')
+        this.myToasts.toastError(this.pageName, "", "CDI (Containerized Data Importer) not found! This component is required for disk and volume operations. Please visit KubeVirt website for installation instructions.");
       }
     }
 

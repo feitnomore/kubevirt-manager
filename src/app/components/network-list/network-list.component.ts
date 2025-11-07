@@ -10,6 +10,8 @@ import { K8sApisService } from 'src/app/services/k8s-apis.service';
 })
 export class NetworkListComponent implements OnInit {
 
+    pageName: string = "Networks";
+
     netAttachList: NetworkAttach[] = [];
 
     constructor(
@@ -19,7 +21,7 @@ export class NetworkListComponent implements OnInit {
     async ngOnInit(): Promise<void> {
         let navTitle = document.getElementById("nav-title");
         if(navTitle != null) {
-            navTitle.replaceChildren("Network");
+            navTitle.replaceChildren(this.pageName);
         }
         await this.getNetworks();
     }

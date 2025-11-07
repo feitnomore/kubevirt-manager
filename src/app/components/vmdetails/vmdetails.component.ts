@@ -14,6 +14,7 @@ import { VMNewtork } from 'src/app/models/vmnewtork.model';
 import { removeVolumeOptions } from 'src/app/interfaces/removeVolumeOptions';
 import { addVolumeOptions } from 'src/app/interfaces/addVolumeOptions';
 import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
+import { Toasts } from 'src/app/classes/toasts';
 
 
 @Component({
@@ -23,6 +24,9 @@ import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
 })
 export class VmdetailsComponent implements OnInit {
 
+    pageName: string = "Virtual Machine Details";
+
+    myToasts!: Toasts;
     vmName: string = "";
     vmNamespace: string = "";
     activeVm: KubeVirtVM = new KubeVirtVM;
@@ -80,8 +84,9 @@ export class VmdetailsComponent implements OnInit {
 
         let navTitle = document.getElementById("nav-title");
         if(navTitle != null) {
-            navTitle.replaceChildren("Virtual Machine Details");
+            navTitle.replaceChildren(this.pageName);
         }
+        this.myToasts = new Toasts();
         await this.loadVm();
         await this.loadPrometheus();
         await this.loadSerialLog();
@@ -1016,9 +1021,10 @@ export class VmdetailsComponent implements OnInit {
         try {
             const data = await lastValueFrom(this.kubeVirtService.changeVmStrategy(this.activeVm.namespace, this.activeVm.name, strategy));
             this.hideComponent("modal-type");
+            this.myToasts.toastSuccess(this.pageName, "", "Edited Virtual Machine : " + this.activeVm.name);
             this.reloadComponent();
         } catch (e: any) {
-            alert(e.message.error);
+            this.myToasts.toastError(this.pageName, "", e.message);
             console.log(e);
         }
     }
@@ -1053,9 +1059,10 @@ export class VmdetailsComponent implements OnInit {
         try {
             const data = await lastValueFrom(this.kubeVirtService.changeVmType(this.activeVm.namespace, this.activeVm.name, type));
             this.hideComponent("modal-type");
+            this.myToasts.toastSuccess(this.pageName, "", "Edited Virtual Machine : " + this.activeVm.name);
             this.reloadComponent();
         } catch (e: any) {
-            alert(e.message.error);
+            this.myToasts.toastError(this.pageName, "", e.message);
             console.log(e);
         }
     }
@@ -1099,9 +1106,10 @@ export class VmdetailsComponent implements OnInit {
                     };
                     const data = await lastValueFrom(this.kubeVirtService.unplugVolume(this.activeVm.namespace, this.activeVm.name, thisRemoveOptions));
                     this.hideComponent("modal-unplug");
+                    this.myToasts.toastSuccess(this.pageName, "", "Edited Virtual Machine : " + this.activeVm.name);
                     this.reloadComponent();
                 } catch (e: any) {
-                    alert(e.message.error);
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
                 }
             }
@@ -1177,9 +1185,10 @@ export class VmdetailsComponent implements OnInit {
             }
             const data = await lastValueFrom(this.kubeVirtService.plugVolume(this.activeVm.namespace, this.activeVm.name, thisAddVolumeOptions));
             this.hideComponent("modal-hotplug");
+            this.myToasts.toastSuccess(this.pageName, "", "Edited Virtual Machine : " + this.activeVm.name);
             this.reloadComponent();
         } catch (e: any) {
-            alert(e.message.error);
+            this.myToasts.toastError(this.pageName, "", e.message);
             console.log(e);
         }
     }
@@ -1228,9 +1237,10 @@ export class VmdetailsComponent implements OnInit {
         try {
             const data = await lastValueFrom(this.kubeVirtService.patchVmDisks(this.activeVm.namespace, this.activeVm.name, JSON.stringify(newDiskList)));
             this.hideComponent("modal-disk");
+            this.myToasts.toastSuccess(this.pageName, "", "Edited Virtual Machine : " + this.activeVm.name);
             this.reloadComponent();
         } catch (e: any) {
-            alert(e.error.message);
+            this.myToasts.toastError(this.pageName, "", e.message);
             console.log(e);
         }
     }
@@ -1271,9 +1281,10 @@ export class VmdetailsComponent implements OnInit {
             try {
                 const data = await lastValueFrom(this.kubeVirtService.scaleVm(this.activeVm.namespace, this.activeVm.name, cores, threads, sockets, memory));
                 this.hideComponent("modal-resize");
+                this.myToasts.toastSuccess(this.pageName, "", "Edited Virtual Machine : " + this.activeVm.name);
                 this.reloadComponent();
             } catch (e: any) {
-                alert(e.error.message);
+                this.myToasts.toastError(this.pageName, "", e.message);
                 console.log(e);
             }
         }
@@ -1309,9 +1320,10 @@ export class VmdetailsComponent implements OnInit {
         try {
             const data = await lastValueFrom(this.kubeVirtService.changeVmPc(this.activeVm.namespace, this.activeVm.name, pc));
             this.hideComponent("modal-pc");
+            this.myToasts.toastSuccess(this.pageName, "", "Edited Virtual Machine : " + this.activeVm.name);
             this.reloadComponent();
         } catch (e: any) {
-            alert(e.message.error);
+            this.myToasts.toastError(this.pageName, "", e.message);
             console.log(e);
         }
     }
@@ -1353,24 +1365,31 @@ export class VmdetailsComponent implements OnInit {
     async vmOperations(vmOperation: string, vmNamespace: string, vmName: string): Promise<void> {
         if(vmOperation == "start"){
             var data = await lastValueFrom(this.kubeVirtService.startVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Started: " + vmName);
             this.reloadComponent();
         } else if (vmOperation == "stop") {
             var data = await lastValueFrom(this.kubeVirtService.stopVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Stopped: " + vmName);
             this.reloadComponent();
         } else if (vmOperation == "reboot"){
             var data = await lastValueFrom(this.kubeVirtService.restartVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Restarted: " + vmName);
             this.reloadComponent();
         } else if (vmOperation == "pause") {
             const data = await lastValueFrom(this.kubeVirtService.pauseVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Paused: " + vmName);
             this.reloadComponent();
         } else if (vmOperation == "unpause") {
             const data = await lastValueFrom(this.kubeVirtService.unpauseVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Resumed: " + vmName);
             this.reloadComponent();
         } else if (vmOperation == "delete") {
             const data = await lastValueFrom(this.kubeVirtService.deleteVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Deleted: " + vmName);
             this.reloadComponent();
         } else if (vmOperation == "migrate") {
             const data = await lastValueFrom(this.kubeVirtService.migrateVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Migreated: " + vmName);
             this.reloadComponent();
         }
     }

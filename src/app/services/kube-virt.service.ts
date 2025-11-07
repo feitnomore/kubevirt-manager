@@ -243,7 +243,7 @@ export class KubeVirtService {
     }
 
     editClusterInstanceType(typeName: string, typeCPU: string, typeMemory: string): Observable<any> {
-        var baseUrl ='./k8s/apis/instancetype.kubevirt.io/v1alpv1beta1ha1';
+        var baseUrl ='./k8s/apis/instancetype.kubevirt.io/v1beta1';
         const headers = {
             'content-type': 'application/merge-patch+json',
             'accept': 'application/json'
