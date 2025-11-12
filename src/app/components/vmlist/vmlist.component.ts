@@ -43,7 +43,7 @@ export class VmlistComponent implements OnInit {
     firewallLabels: FirewallLabels = new FirewallLabels;
 
     showSuggestions: boolean = false;
-    enableCloudInit: boolean = false;
+    enableCloudInit: boolean = true;
     enableCloudInitNetwork: boolean = false;
 
     /*

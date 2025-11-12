@@ -185,9 +185,6 @@
                     <a class="nav-link" id="newvm-meta-tab" data-toggle="pill" href="#newvm-meta" role="tab" aria-controls="newvm-meta" aria-selected="false">Metadata</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link" id="newvm-cloudinit-tab" data-toggle="pill" href="#newvm-cloudinit" role="tab" aria-controls="newvm-cloudinit" aria-selected="false">Cloud-Init</a>
-                  </li>
-                  <li class="nav-item">
                     <a class="nav-link" id="newvm-cpumem-tab" data-toggle="pill" href="#newvm-cpumem" role="tab" aria-controls="newvm-cpumem" aria-selected="false">CPU/Memory</a>
                   </li>
                   <li class="nav-item">
@@ -197,8 +194,10 @@
                     <a class="nav-link" id="newvm-net-tab" data-toggle="pill" href="#newvm-net" role="tab" aria-controls="newvm-net" aria-selected="false">Networking</a>
                   </li>
                   <li class="nav-item">
-                    <!-- This is hidden by default, and only shown if enableCloudInit == true -->
-                    <a class="nav-link" id="newvm-userdata-tab" data-toggle="pill" href="#newvm-userdata" role="tab" aria-controls="newvm-userdata" aria-selected="false" style="display: none;">User Data</a>
+                    <a class="nav-link" id="newvm-cloudinit-tab" data-toggle="pill" href="#newvm-cloudinit" role="tab" aria-controls="newvm-cloudinit" aria-selected="false">Cloud-Init</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" id="newvm-userdata-tab" data-toggle="pill" href="#newvm-userdata" role="tab" aria-controls="newvm-userdata" aria-selected="false">User Data</a>
                   </li>
                   <li class="nav-item">
                     <!-- This is hidden by default, and only shown if enableCloudInit == true && Network != podNetwork -->
@@ -295,24 +294,6 @@
                                 </tbody>
                             </table>
                         </form>
-                    </div>
-                  </div>
-                  <!-- CLOUD-INIT TAB -->
-                  <div class="tab-pane fade" id="newvm-cloudinit" role="tabpanel" aria-labelledby="newvm-cloudinit-tab">
-                    <div class="row">
-                      <label for="newvm-enablecloudinit">Enable cloud-init:</label>
-                      <select #newvmenablecloudinit class="custom-select rounded-0" name="newvm-enablecloudinit" id="newvm-enablecloudinit" (change)="onChangeCloudInit(newvmenablecloudinit.value)">
-                        <option value="False" selected>False</option>
-                        <option value="True">True</option>
-                      </select>
-                    </div>
-                    <div class="row">
-                      <label for="newvm-cloudinitdriver">Device Driver:</label>
-                      <select #newvmcloudinitdriver class="custom-select rounded-0" name="newvm-cloudinitdriver" id="newvm-cloudinitdriver" disabled>
-                        <option value="virtio" selected>virtio</option>
-                        <option value="sata">sata</option>
-                        <option value="scsi">scsi</option>
-                      </select>
                     </div>
                   </div>
                   <!-- CPU/MEM TAB -->
@@ -503,6 +484,24 @@
                                 </div>
                             </div>
                         </form>
+                    </div>
+                  </div>
+                  <!-- CLOUD-INIT TAB -->
+                  <div class="tab-pane fade" id="newvm-cloudinit" role="tabpanel" aria-labelledby="newvm-cloudinit-tab">
+                    <div class="row">
+                      <label for="newvm-enablecloudinit">Enable cloud-init:</label>
+                      <select #newvmenablecloudinit class="custom-select rounded-0" name="newvm-enablecloudinit" id="newvm-enablecloudinit" (change)="onChangeCloudInit(newvmenablecloudinit.value)">
+                        <option value="True" selected>True</option>
+                        <option value="False">False</option>
+                      </select>
+                    </div>
+                    <div class="row">
+                      <label for="newvm-cloudinitdriver">Device Driver:</label>
+                      <select #newvmcloudinitdriver class="custom-select rounded-0" name="newvm-cloudinitdriver" id="newvm-cloudinitdriver">
+                        <option value="virtio" selected>virtio</option>
+                        <option value="sata">sata</option>
+                        <option value="scsi">scsi</option>
+                      </select>
                     </div>
                   </div>
                   <!-- USERDATA TAB -->

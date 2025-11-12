@@ -15,6 +15,16 @@ export class KubeVirtService {
 
     constructor(private http: HttpClient) { }
 
+    getKubevirts(): Observable<any> {
+        var baseUrl ='./k8s/apis/kubevirt.io/v1';
+        return this.http.get(`${baseUrl}/kubevirts`);
+    }
+
+    getKubevirt(namespace: string, name: string): Observable<any> {
+        var baseUrl ='./k8s/apis/kubevirt.io/v1';
+        return this.http.get(`${baseUrl}/namespaces/${namespace}/kubevirts/${name}`);
+    }
+
     getVMs(): Observable<any> {
         var baseUrl ='./k8s/apis/kubevirt.io/v1';
         return this.http.get(`${baseUrl}/virtualmachines`);
