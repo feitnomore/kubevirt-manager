@@ -6,6 +6,7 @@ import { Image } from 'src/app/interfaces/image';
 import { Images } from 'src/app/models/images.model';
 import { K8sService } from 'src/app/services/k8s.service';
 import { KubevirtMgrService } from 'src/app/services/kubevirt-mgr.service';
+import { Toasts } from 'src/app/classes/toasts';
 
 @Component({
   selector: 'app-images',
@@ -14,8 +15,12 @@ import { KubevirtMgrService } from 'src/app/services/kubevirt-mgr.service';
 })
 export class ImagesComponent implements OnInit {
 
+    pageName: string = "Images";
+
     imageList: Images [] = [];
     namespacesList: string[] = [];
+
+    myToasts!: Toasts;
 
     /*
      * Dynamic Tables
@@ -46,8 +51,9 @@ export class ImagesComponent implements OnInit {
     async ngOnInit(): Promise<void> {
         let navTitle = document.getElementById("nav-title");
         if(navTitle != null) {
-            navTitle.replaceChildren("Images");
+            navTitle.replaceChildren(this.pageName);
         }
+        this.myToasts = new Toasts();
         await this.getImages();
         this.imgList_dtTrigger.next(null);
         await this.getNamespaces();
@@ -127,9 +133,10 @@ export class ImagesComponent implements OnInit {
                 try {
                     const data = await lastValueFrom(this.kubevirtMgrService.createImage(myImage));
                     this.hideComponent("modalnew");
+                    this.myToasts.toastSuccess(this.pageName, "", "Created Image: " + name)
                     this.fullReload(); 
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
                 }
             }
@@ -249,9 +256,10 @@ export class ImagesComponent implements OnInit {
                 try {
                     let deleteImage = await lastValueFrom(this.kubevirtMgrService.deleteImage(imageNamespace, imageName));
                     this.hideComponent("modal-delete");
+                    this.myToasts.toastSuccess(this.pageName, "", "Deleted Image: " + imageName);
                     this.fullReload();
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
                 }
             }
@@ -433,9 +441,10 @@ export class ImagesComponent implements OnInit {
                 try {
                     const data = await lastValueFrom(this.kubevirtMgrService.editImage(myImage));
                     this.hideComponent("modaledit");
+                    this.myToasts.toastSuccess(this.pageName, "", "Edited Image: " + imageName);
                     this.fullReload();
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
                 }
             }

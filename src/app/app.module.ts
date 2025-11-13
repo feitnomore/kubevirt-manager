@@ -25,6 +25,7 @@ import { KClusterPoolDetailsComponent } from './components/kcluster-pool-details
 import { ImagesComponent } from './components/images/images.component';
 import { SSHKeysComponent } from './components/sshkeys/sshkeys.component';
 import { FirewallListComponent } from './components/firewall-list/firewall-list.component';
+import { SettingsComponent } from './components/settings/settings.component';
 import { DataTablesModule } from 'angular-datatables'
 
 @NgModule({ declarations: [
@@ -50,6 +51,7 @@ import { DataTablesModule } from 'angular-datatables'
         ImagesComponent,
         SSHKeysComponent,
         FirewallListComponent,
+        SettingsComponent
     ],
     bootstrap: [
         AppComponent

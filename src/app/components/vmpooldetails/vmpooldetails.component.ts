@@ -11,7 +11,8 @@ import { KubeVirtService } from 'src/app/services/kube-virt.service';
 import { Probe } from 'src/app/interfaces/probe';
 import { VMNewtork } from 'src/app/models/vmnewtork.model';
 import { KubeVirtClusterInstanceType } from 'src/app/models/kube-virt-clusterinstancetype';
-import { Constants } from 'src/app/constants';
+import { Constants } from 'src/app/classes/constants';
+import { Toasts } from 'src/app/classes/toasts';
 
 @Component({
   selector: 'app-vmpooldetails',
@@ -20,7 +21,10 @@ import { Constants } from 'src/app/constants';
 })
 export class VmpooldetailsComponent implements OnInit {
 
+    pageName: string = "VM Pool Details";
+
     myConstants!: Constants;
+    myToasts!: Toasts;
     poolName: string = "";
     poolNamespace: string = "";
     poolNetwork = {
@@ -86,9 +90,10 @@ export class VmpooldetailsComponent implements OnInit {
         this.poolNamespace = this.route.snapshot.params['namespace'];
         let navTitle = document.getElementById("nav-title");
         if(navTitle != null) {
-            navTitle.replaceChildren("Virtual Machine Pool Details");
+            navTitle.replaceChildren(this.pageName);
         }
         this.myConstants = new Constants();
+        this.myToasts = new Toasts();
         await this.getClusterInstanceTypes();
         await this.getVMIs();
         await this.loadPool();
@@ -571,9 +576,10 @@ export class VmpooldetailsComponent implements OnInit {
     async removeVmFromPool(vmNamespace: string, vmName: string, vmNode: string) {
         try {
             const data = await lastValueFrom(this.kubeVirtService.removeVmFromPool(vmNamespace, vmName, vmNode));
+            this.myToasts.toastSuccess(this.pageName, "", "Removed VM from: " + this.activePool.name);
             this.reloadComponent();
         } catch (e: any) {
-            alert(e.error.message);
+            this.myToasts.toastError(this.pageName, "", e.message);
             console.log(e);
         }
     }
@@ -592,6 +598,7 @@ export class VmpooldetailsComponent implements OnInit {
                 try {
                     const data = await lastValueFrom(this.kubeVirtService.deleteVm(vmNamespace, vmName));
                     this.hideComponent("modal-deletevm");
+                    this.myToasts.toastSuccess(this.pageName, "", "Deleted VM from: " + this.activePool.name);
                     this.reloadComponent();
                 } catch (e) {
                     console.log(e);
@@ -636,9 +643,10 @@ export class VmpooldetailsComponent implements OnInit {
             try {
                 const data = await lastValueFrom(this.kubeVirtService.scalePoolReplicas(poolNamespace, poolName, replicasSize));
                 this.hideComponent("modal-resize");
+                this.myToasts.toastSuccess(this.pageName, "", "Edited VM Pool: " + poolName);
                 this.reloadComponent();
             } catch (e: any) {
-               alert(e.error.message);
+                this.myToasts.toastError(this.pageName, "", e.message);
                console.log(e);
             }
         }
@@ -674,9 +682,10 @@ export class VmpooldetailsComponent implements OnInit {
         try {
             const data = await lastValueFrom(this.kubeVirtService.changePoolType(poolNamespace, poolName, poolType));
             this.hideComponent("modal-type");
+            this.myToasts.toastSuccess(this.pageName, "", "Edited VM Pool: " + poolName);
             this.reloadComponent();
         } catch (e: any) {
-            alert(e.error.message);
+            this.myToasts.toastError(this.pageName, "", e.message);
             console.log(e);
         }
     }
@@ -717,10 +726,11 @@ export class VmpooldetailsComponent implements OnInit {
             try {
                 const data = await lastValueFrom(this.kubeVirtService.scalePool(resizeNamespace, resizeName, cores, threads, sockets, memory));
                 this.hideComponent("modal-resize");
+                this.myToasts.toastSuccess(this.pageName, "", "Edited VM Pool: " + resizeName);
                 this.reloadComponent();
             } catch (e: any) {
-                alert(e.error.message);
-                 console.log(e);
+                this.myToasts.toastError(this.pageName, "", e.message);
+                console.log(e);
             }
         }
     }
@@ -755,9 +765,10 @@ export class VmpooldetailsComponent implements OnInit {
         try {
             const data = await lastValueFrom(this.kubeVirtService.changePoolPc(poolNamespace, poolName, poolPc));
             this.hideComponent("modal-pc");
+            this.myToasts.toastSuccess(this.pageName, "", "Edited VM Pool: " + poolName);
             this.reloadComponent();
         } catch (e: any) {
-            alert(e.error.message);
+            this.myToasts.toastError(this.pageName, "", e.message);
             console.log(e);
         }
     }
@@ -845,9 +856,10 @@ export class VmpooldetailsComponent implements OnInit {
             try {
                 const data = await lastValueFrom(this.kubeVirtService.removePoolLiveness(namespace, name));
                 this.hideComponent("modal-liveness");
+                this.myToasts.toastSuccess(this.pageName, "", "Edited VM Pool: " + name);
                 this.reloadComponent();
             } catch (e: any) {
-                alert(e.error.message);
+                this.myToasts.toastError(this.pageName, "", e.message);
                 console.log(e);
             }
         } else {
@@ -876,9 +888,10 @@ export class VmpooldetailsComponent implements OnInit {
                 }
                 const data = await lastValueFrom(this.kubeVirtService.updatePoolLiveness(namespace, name, JSON.stringify(livenessProbe)));
                 this.hideComponent("modal-liveness");
+                this.myToasts.toastSuccess(this.pageName, "", "Edited VM Pool: " + name);
                 this.reloadComponent();
             } catch (e: any) {
-                alert(e.error.message);
+                this.myToasts.toastError(this.pageName, "", e.message);
                 console.log(e);
             }
         }
@@ -966,9 +979,10 @@ export class VmpooldetailsComponent implements OnInit {
             try {
                 const data = await lastValueFrom(this.kubeVirtService.removePoolReadiness(namespace, name));
                 this.hideComponent("modal-readiness");
+                this.myToasts.toastSuccess("VM Pool Details", "", "Edited VM Pool: " + name);
                 this.reloadComponent();
             } catch (e: any) {
-                alert(e.error.message);
+                this.myToasts.toastError("VM Pool Details", "", e.message);
                 console.log(e);
             }
         } else {
@@ -997,9 +1011,10 @@ export class VmpooldetailsComponent implements OnInit {
                 }
                 const data = await lastValueFrom(this.kubeVirtService.updatePoolReadiness(namespace, name, JSON.stringify(readinessProbe)));
                 this.hideComponent("modal-readiness");
+                this.myToasts.toastSuccess(this.pageName, "", "Edited VM Pool: " + name);
                 this.reloadComponent();
             } catch (e: any) {
-                alert(e.error.message);
+                this.myToasts.toastError(this.pageName, "", e.message);
                 console.log(e);
             }
         }
@@ -1011,15 +1026,19 @@ export class VmpooldetailsComponent implements OnInit {
     async vmOperations(vmOperation: string, vmNamespace: string, vmName: string): Promise<void> {
         if(vmOperation == "start"){
             var data = await lastValueFrom(this.kubeVirtService.startVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Started: " + vmName);
             this.reloadComponent();
         } else if (vmOperation == "stop") {
             var data = await lastValueFrom(this.kubeVirtService.stopVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Stopped: " + vmName);
             this.reloadComponent();
         } else if (vmOperation == "reboot"){
             var data = await lastValueFrom(this.kubeVirtService.restartVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Restarted: " + vmName);
             this.reloadComponent();
         } else if (vmOperation == "delete") {
             const data = await lastValueFrom(this.kubeVirtService.deleteVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Deleted: " + vmName);
             this.reloadComponent();
         }
     }
@@ -1040,12 +1059,15 @@ export class VmpooldetailsComponent implements OnInit {
     async poolOperations(poolOperation: string, poolNamespace: string, poolName: string): Promise<void> {
         if(poolOperation == "start"){
             var data = await lastValueFrom(this.kubeVirtService.startPool(poolNamespace, poolName));
+            this.myToasts.toastSuccess(this.pageName, "", "Started Pool: " + poolName);
             this.reloadComponent();
         } else if (poolOperation == "stop") {
             var data = await lastValueFrom(this.kubeVirtService.stopPool(poolNamespace, poolName));
+            this.myToasts.toastSuccess(this.pageName, "", "Stopped Pool: " + poolName);
             this.reloadComponent();
         } else if (poolOperation == "delete") {
             const data = await lastValueFrom(this.kubeVirtService.deletePool(poolNamespace, poolName));
+            this.myToasts.toastSuccess(this.pageName, "", "Deleted Pool: " + poolName);
             this.reloadComponent();
         }
     }
@@ -1071,9 +1093,10 @@ export class VmpooldetailsComponent implements OnInit {
         try {
             const data = await lastValueFrom(this.kubeVirtService.changePoolStrategy(this.activePool.namespace, this.activePool.name, strategy));
             this.hideComponent("modal-type");
+            this.myToasts.toastSuccess(this.pageName, "", "Edited VM Pool: " + this.activePool.name);
             this.reloadComponent();
         } catch (e: any) {
-            alert(e.message.error);
+            this.myToasts.toastError(this.pageName, "", e.message);
             console.log(e);
         }
     }

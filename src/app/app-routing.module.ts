@@ -18,6 +18,7 @@ import { KClusterPoolDetailsComponent } from './components/kcluster-pool-details
 import { ImagesComponent } from './components/images/images.component';
 import { SSHKeysComponent } from './components/sshkeys/sshkeys.component';
 import { FirewallListComponent } from './components/firewall-list/firewall-list.component';
+import { SettingsComponent } from './components/settings/settings.component';
 
 const routes: Routes = [
   { path: '', component: DashboardComponent },
@@ -38,7 +39,8 @@ const routes: Routes = [
   { path: 'kclusterpooldetails/:namespace/:name', component: KClusterPoolDetailsComponent },
   { path: 'imagelist', component: ImagesComponent },
   { path: 'sshkeys', component: SSHKeysComponent },
-  { path: 'firewalls', component: FirewallListComponent }
+  { path: 'firewalls', component: FirewallListComponent },
+  { path: 'settings', component: SettingsComponent }
 ];
 
 @NgModule({

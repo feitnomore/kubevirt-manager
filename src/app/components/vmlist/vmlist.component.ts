@@ -16,7 +16,8 @@ import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { KubeVirtClusterInstanceType } from 'src/app/models/kube-virt-clusterinstancetype';
 import { Config } from 'datatables.net';
 import { KubeVirtVMI } from 'src/app/models/kube-virt-vmi.model';
-import { Constants } from 'src/app/constants';
+import { Constants } from 'src/app/classes/constants';
+import { Toasts } from 'src/app/classes/toasts';
 
 @Component({
     selector: 'app-vmlist',
@@ -25,7 +26,10 @@ import { Constants } from 'src/app/constants';
 })
 export class VmlistComponent implements OnInit {
 
+    pageName: string = "Virtual Machines";
+
     myConstants!: Constants;
+    myToasts!: Toasts;
     crdList: any;
     nodeList: K8sNode[] = [];
     vmList: KubeVirtVM[] = [];
@@ -39,6 +43,8 @@ export class VmlistComponent implements OnInit {
     firewallLabels: FirewallLabels = new FirewallLabels;
 
     showSuggestions: boolean = false;
+    enableCloudInit: boolean = true;
+    enableCloudInitNetwork: boolean = false;
 
     /*
      * Dynamic Forms
@@ -98,9 +104,10 @@ export class VmlistComponent implements OnInit {
     async ngOnInit(): Promise<void> {
         let navTitle = document.getElementById("nav-title");
         if(navTitle != null) {
-            navTitle.replaceChildren("Virtual Machines");
+            navTitle.replaceChildren(this.pageName);
         }
         this.myConstants = new Constants();
+        this.myToasts = new Toasts();
         await this.getNodes();
         await this.getClusterInstanceTypes();
         await this.getVMIs();
@@ -374,7 +381,7 @@ export class VmlistComponent implements OnInit {
                 this.nodeList.push(currentNode);
             }
         } catch (e: any) {
-            console.log(e.error.message);
+            console.log(e);
         }
     }
 
@@ -566,7 +573,7 @@ export class VmlistComponent implements OnInit {
                 nsSelectorOptions += "<option value=" + data.items[i].metadata["name"] +">" + data.items[i].metadata["name"] + "</option>\n";
             }
         } catch (e: any) {
-            console.log(e.error.message);
+            console.log(e);
         }
 
         /* Show new window
@@ -593,7 +600,7 @@ export class VmlistComponent implements OnInit {
                 typeSelectorOptions += "<option value=" + data.items[i].metadata["name"] +">" + data.items[i].metadata["name"] + "</option>\n";
             }
         } catch (e: any) {
-            console.log(e.error.message);
+            console.log(e);
         }
 
         /* Load Storage Class List and Set Selector */
@@ -608,7 +615,7 @@ export class VmlistComponent implements OnInit {
                 }
             }
         } catch (e: any) {
-            console.log(e.error.message);
+            console.log(e);
         }
 
         if (selectorNewNodeField != null) {
@@ -642,7 +649,7 @@ export class VmlistComponent implements OnInit {
                 storageSelectorOptions += "<option value=" + data.items[i].metadata["name"] +">" + data.items[i].metadata["name"] + "</option>\n";
             }
         } catch (e: any) {
-            console.log(e.error.message);
+            console.log(e);
         }
 
         let diskStorageClassField = document.getElementById("diskStorageClass-" + frmIndex.toString());
@@ -660,6 +667,8 @@ export class VmlistComponent implements OnInit {
         newvmnamespace: string,
         newvmnode: string,
         newvmrunstrategy: string,
+        newvmenablecloudinit: string,
+        newvmcloudinitdriver: string,
         newvmtype: string,
         newvmcpumemsockets: string,
         newvmcpumemcores: string,
@@ -854,8 +863,8 @@ export class VmlistComponent implements OnInit {
                                 break;
                         }
                     } catch (e: any) {
-                        alert(e.error.message);
-                        console.log(e.error.message);
+                        this.myToasts.toastError(this.pageName, "", e.message);
+                        console.log(e);
                         throw new Error("Error loading disk" + i + " image data!");
                     }
                     try {
@@ -878,8 +887,8 @@ export class VmlistComponent implements OnInit {
                         disks.push(diskObject);
                         console.log(diskObject)
                     } catch (e: any) {
-                        alert(e.error.message);
-                        console.log(e.error.message);
+                        this.myToasts.toastError(this.pageName, "", e.message);
+                        console.log(e);
                         throw new Error("Error creating disk" + i.toString() + " from Image!");
                     }
                 } else if (actualDisk.diskType == "blank") {
@@ -906,8 +915,8 @@ export class VmlistComponent implements OnInit {
                         disks.push(diskObject);
                         console.log(diskObject)
                     } catch (e: any) {
-                        alert(e.error.message);
-                        console.log(e.error.message);
+                        this.myToasts.toastError(this.pageName, "", e.message);
+                        console.log(e);
                         throw new Error("Error creating disk" + i.toString() + " from Blank!");
                     }
                 } else if (actualDisk.diskType == "dv") {
@@ -956,8 +965,8 @@ export class VmlistComponent implements OnInit {
                         cloudconfig += "    ssh_authorized_keys:\n";
                         cloudconfig += "      - " + atob(sshKey) + "\n";
                     } catch (e: any) {
-                        alert(e.error.message);
-                        console.log(e.error.message);
+                        this.myToasts.toastError(this.pageName, "", e.message);
+                        console.log(e);
                     }
                 }
             } else {
@@ -1009,10 +1018,12 @@ export class VmlistComponent implements OnInit {
             }
 
             /* Adding UserData/NetworkData device */
-            let diskUserData = {'name': "disk" + this.disks.length.toString(), 'disk': {'bus': "virtio"}};
-            let deviceUserData = {'name': "disk" + this.disks.length.toString(), 'cloudInitNoCloud': {'userData': cloudconfig, 'networkData': netconfig}};
-            volumes.push(deviceUserData);
-            disks.push(diskUserData);
+            if (newvmenablecloudinit == "True") {
+                let diskUserData = {'name': "disk" + this.disks.length.toString(), 'disk': {'bus': newvmcloudinitdriver}};
+                let deviceUserData = {'name': "disk" + this.disks.length.toString(), 'cloudInitNoCloud': {'userData': cloudconfig, 'networkData': netconfig}};
+                volumes.push(deviceUserData);
+                disks.push(diskUserData);
+            }
         
             /* NICs Setup */
             let thisNICList = this.getNics();
@@ -1114,10 +1125,11 @@ export class VmlistComponent implements OnInit {
             try {
                 let data = await lastValueFrom(this.kubeVirtService.createVm(thisVirtualMachine));
                 this.hideComponent("modal-newvm");
+                this.myToasts.toastSuccess(this.pageName, "", "Created Virtual Machine: " + newvmname);
                 this.fullReload();
             } catch (e: any) {
-                alert(e.error.message);
-                console.log(e.error.message);
+                this.myToasts.toastError(this.pageName, "", e.message);
+                console.log(e);
             }
         }
     }
@@ -1174,10 +1186,11 @@ export class VmlistComponent implements OnInit {
                 try {
                     const data = await lastValueFrom(this.kubeVirtService.scaleVm(resizeNamespace, resizeName, cores, threads, sockets, memory));
                     this.hideComponent("modal-resize");
+                    this.myToasts.toastSuccess(this.pageName, "", "Edited Virtual Machine: " + resizeName);
                     this.fullReload();
                 } catch (e: any) {
-                    alert(e.error.message);
-                    console.log(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
+                    console.log(e);
                 }
             }
         }
@@ -1224,10 +1237,11 @@ export class VmlistComponent implements OnInit {
                 try {
                     const data = await lastValueFrom(this.kubeVirtService.deleteVm(vmNamespace, vmName));
                     this.hideComponent("modal-delete");
+                    this.myToasts.toastSuccess(this.pageName, "", "Deleted Virtual Machine: " + vmName);
                     this.fullReload();
                 } catch (e: any) {
-                    alert(e.error.message);
-                    console.log(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
+                    console.log(e);
                 }
             }
         }
@@ -1284,10 +1298,11 @@ export class VmlistComponent implements OnInit {
                 try {
                     const data = await lastValueFrom(this.kubeVirtService.changeVmType(vmNamespace, vmName, vmType));
                     this.hideComponent("modal-type");
+                    this.myToasts.toastSuccess(this.pageName, "", "Edited Virtual Machine: " + name);
                     this.fullReload();
                 } catch (e: any) {
-                    alert(e.error.message);
-                    console.log(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
+                    console.log(e);
                 }
             }
         }
@@ -1299,24 +1314,31 @@ export class VmlistComponent implements OnInit {
     async vmOperations(vmOperation: string, vmNamespace: string, vmName: string): Promise<void> {
         if(vmOperation == "start"){
             var data = await lastValueFrom(this.kubeVirtService.startVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Started: " + vmName);
             this.fullReload();
         } else if (vmOperation == "stop") {
             var data = await lastValueFrom(this.kubeVirtService.stopVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Stopped: " + vmName);
             this.fullReload();
         } else if (vmOperation == "reboot"){
             var data = await lastValueFrom(this.kubeVirtService.restartVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Rebooted: " + vmName);
             this.fullReload();
         } else if (vmOperation == "pause") {
             const data = await lastValueFrom(this.kubeVirtService.pauseVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Paused: " + vmName);
             this.fullReload();
         } else if (vmOperation == "unpause") {
             const data = await lastValueFrom(this.kubeVirtService.unpauseVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Resumed: " + vmName);
             this.fullReload();
         } else if (vmOperation == "delete") {
             const data = await lastValueFrom(this.kubeVirtService.deleteVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Deleted: " + vmName);
             this.fullReload();
         } else if (vmOperation == "migrate") {
             const data = await lastValueFrom(this.kubeVirtService.migrateVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Migrated: " + vmName);
             this.fullReload();
         }
     }
@@ -1380,7 +1402,7 @@ export class VmlistComponent implements OnInit {
                 diskSelectorOptions += "<option value=" + disks[i].metadata["name"] +">" + disks[i].metadata["name"] + "</option>\n";
             }
         } catch (e: any) {
-            console.log(e.error.message);
+            console.log(e);
         }
         return diskSelectorOptions;
     }
@@ -1398,7 +1420,7 @@ export class VmlistComponent implements OnInit {
                 imgSelectorOptions += "<option value=" + images[i].metadata["name"] +">" + images[i].metadata["name"] + "</option>\n";
             }
         } catch (e: any) {
-            console.log(e.error.message);
+            console.log(e);
         }
         return imgSelectorOptions;
     }
@@ -1452,6 +1474,7 @@ export class VmlistComponent implements OnInit {
         }
         if (netData != null && frmIndex == 0) {
             netData.setAttribute("style","display: none;");
+            this.enableCloudInitNetwork = false;
         }
     }
 
@@ -1482,6 +1505,35 @@ export class VmlistComponent implements OnInit {
             selectorSSHKey.innerHTML = "";
             selectorAuthType.innerHTML = authOptions;
             this.onChangeAuthType("password", namespace);
+        }
+    }
+
+    /*
+     * New VM: Enable/Disable Cloud Init
+     */
+    async onChangeCloudInit(selectorValue: string) {
+        let selectorDriver = document.getElementById("newvm-cloudinitdriver");
+        let tabUserData = document.getElementById("newvm-userdata-tab");
+        let tabNetData = document.getElementById("newvm-netdata-tab");
+        
+        if(selectorDriver != null && tabUserData != null) {
+            if(selectorValue == "True") {
+                this.enableCloudInit = true;
+                selectorDriver.removeAttribute("disabled");
+                tabUserData.setAttribute("style","display: flex;");
+                if(this.enableCloudInitNetwork == true && tabNetData != null)
+                {
+                    tabNetData.setAttribute("style","display: flex;");
+                }
+            } else if (selectorValue == "False") {
+                this.enableCloudInit = false;
+                selectorDriver.setAttribute("disabled", "disabled");
+                tabUserData.setAttribute("style","display: none;");
+                if(tabNetData != null)
+                {
+                    tabNetData.setAttribute("style","display: none;");
+                }
+            }
         }
     }
 
@@ -1566,14 +1618,15 @@ export class VmlistComponent implements OnInit {
             let selectorNetworkTypeField = document.getElementById("networkType-" + frmIndex.toString());
             let networkTypeSelectorOptions = "<option selected></option>\n<option value=bridge>bridge</option>\n";
             if(frmIndex == 0) {
-                if(netData != null && thisNetwork.toLowerCase() != "podnetwork") {
+                if(netData != null && thisNetwork.toLowerCase() != "podnetwork" && this.enableCloudInit == true) {
                     networkTypeSelectorOptions += "<option value=macvtap>macvtap</option>\n";
                     netData.setAttribute("style","display: flex;");
-
+                    this.enableCloudInitNetwork = true;
                 } else {
                     networkTypeSelectorOptions += "<option value=masquerade>masquerade</option>\n";
                     if(netData != null && thisNetwork.toLowerCase() == "podnetwork") {
                         netData.setAttribute("style","display: none;");
+                        this.enableCloudInitNetwork = false;
                     }
                 }
 
@@ -1654,6 +1707,10 @@ export class VmlistComponent implements OnInit {
             if(this.crdList[i].metadata["name"] == this.myConstants.ContainerizedDataImporter) {
                 this.cdiCheck = true;
             }
+        }
+
+        if(this.cdiCheck == false) {
+            this.myToasts.toastError(this.pageName, "", "CDI (Containerized Data Importer) not found! This component is required for disk and volume operations. Please visit KubeVirt website for installation instructions.");
         }
     }
 

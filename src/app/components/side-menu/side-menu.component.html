@@ -9,7 +9,7 @@
   <!-- Sidebar -->
   <div class="sidebar">
 
-    <!-- Menubar -->
+  <!-- Menubar -->
     <!-- Sidebar Menu -->
     <nav class="mt-2">
       <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
@@ -28,20 +28,20 @@
         <li class="nav-item">
           <a routerLink="/vmpools" class="nav-link" alt="#" title="Virtual Machine Pools...">
             <i class="nav-icon fas fa-server"></i>
-              <p>VM Pools</p>
+            <p>VM Pools</p>
           </a>
         </li>
         <li class="nav-item">
           <a routerLink="/autoscale" class="nav-link" alt="#" title="Auto Scaling...">
             <i class="nav-icon fas fa-expand-alt"></i>
-              <p>Auto Scaling</p>
+            <p>Auto Scaling</p>
           </a>
         </li>
         <li class="nav-item" *ngIf="capkCheck">
-            <a routerLink="/kcluster" class="nav-link" alt="#" title="Clusters...">
-              <i class="nav-icon fas fa-cubes"></i>
-              <p>Clusters</p>
-            </a>
+          <a routerLink="/kcluster" class="nav-link" alt="#" title="Clusters...">
+            <i class="nav-icon fas fa-cubes"></i>
+            <p>Clusters</p>
+          </a>
         </li>
         <li class="nav-item">
           <a routerLink="/nodelist" class="nav-link" alt="#" title="Nodes...">
@@ -56,10 +56,10 @@
           </a>
         </li>
         <li class="nav-item">
-            <a routerLink="/citlist" class="nav-link" alt="#" title="Instance Types...">
-              <i class="nav-icon fas fa-book"></i>
-              <p>Instance Types</p>
-            </a>
+          <a routerLink="/citlist" class="nav-link" alt="#" title="Instance Types...">
+            <i class="nav-icon fas fa-book"></i>
+            <p>Instance Types</p>
+          </a>
         </li>
         <li class="nav-item">
           <a routerLink="/lblist" class="nav-link" alt="#" title="Load Balancers...">
@@ -68,31 +68,39 @@
            </a>
         </li>
         <li class="nav-item" *ngIf="imgCheck">
-            <a routerLink="/imagelist" class="nav-link" alt="#" title="Images...">
-              <i class="nav-icon fas fa-compact-disc"></i>
-              <p>Images</p>
-            </a>
+          <a routerLink="/imagelist" class="nav-link" alt="#" title="Images...">
+            <i class="nav-icon fas fa-compact-disc"></i>
+            <p>Images</p>
+          </a>
         </li>
         <li class="nav-item">
-            <a routerLink="/sshkeys" class="nav-link" alt="#" title="SSH Keys...">
-              <i class="nav-icon fas fa-key"></i>
-              <p>SSH Keys</p>
-            </a>
+          <a routerLink="/sshkeys" class="nav-link" alt="#" title="SSH Keys...">
+            <i class="nav-icon fas fa-key"></i>
+            <p>SSH Keys</p>
+          </a>
         </li>
-        <!--
+      <!--
         <li class="nav-item">
-            <a routerLink="/firewalls" class="nav-link" alt="#" title="Firewall...">
-              <i class="nav-icon fas fa-shield-alt"></i>
-              <p>Firewall</p>
-            </a>
+          <a routerLink="/firewalls" class="nav-link" alt="#" title="Firewall...">
+            <i class="nav-icon fas fa-shield-alt"></i>
+            <p>Firewall</p>
+          </a>
         </li>
-        -->
+      -->
         <li class="nav-item" *ngIf="networkCheck">
           <a routerLink="/netlist" class="nav-link" alt="#" title="Network...">
             <i class="nav-icon fas fa-network-wired"></i>
             <p>Network</p>
           </a>
         </li>
+      <!--
+        <li class="nav-item">
+          <a routerLink="/dashboard" class="nav-link" alt="#" title="Settings...">
+            <i class="nav-icon fas fa-cog"></i>
+            <p>Settings</p>
+          </a>
+        </li>
+      -->
       </ul>
     </nav>
     <!-- /.sidebar-menu -->

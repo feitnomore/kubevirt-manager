@@ -15,6 +15,16 @@ export class KubeVirtService {
 
     constructor(private http: HttpClient) { }
 
+    getKubevirts(): Observable<any> {
+        var baseUrl ='./k8s/apis/kubevirt.io/v1';
+        return this.http.get(`${baseUrl}/kubevirts`);
+    }
+
+    getKubevirt(namespace: string, name: string): Observable<any> {
+        var baseUrl ='./k8s/apis/kubevirt.io/v1';
+        return this.http.get(`${baseUrl}/namespaces/${namespace}/kubevirts/${name}`);
+    }
+
     getVMs(): Observable<any> {
         var baseUrl ='./k8s/apis/kubevirt.io/v1';
         return this.http.get(`${baseUrl}/virtualmachines`);
@@ -243,7 +253,7 @@ export class KubeVirtService {
     }
 
     editClusterInstanceType(typeName: string, typeCPU: string, typeMemory: string): Observable<any> {
-        var baseUrl ='./k8s/apis/instancetype.kubevirt.io/v1alpv1beta1ha1';
+        var baseUrl ='./k8s/apis/instancetype.kubevirt.io/v1beta1';
         const headers = {
             'content-type': 'application/merge-patch+json',
             'accept': 'application/json'

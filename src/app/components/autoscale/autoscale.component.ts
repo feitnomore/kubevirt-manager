@@ -7,7 +7,8 @@ import { K8sService } from 'src/app/services/k8s.service';
 import { KubeVirtService } from 'src/app/services/kube-virt.service';
 import { HorizontalPodAutoscaler } from 'src/app/interfaces/horizontal-pod-autoscaler';
 import { Config } from 'datatables.net';
-import { Constants } from 'src/app/constants';
+import { Constants } from 'src/app/classes/constants';
+import { Toasts } from 'src/app/classes/toasts';
 
 @Component({
   selector: 'app-autoscale',
@@ -16,7 +17,10 @@ import { Constants } from 'src/app/constants';
 })
 export class AutoscaleComponent implements OnInit {
 
+    pageName: string = "Auto Scaling";
+
     myConstants!: Constants;
+    myToasts!: Toasts;
     hpaList: K8sHPA[] = [];
 
     /*
@@ -46,9 +50,10 @@ export class AutoscaleComponent implements OnInit {
     async ngOnInit(): Promise<void> {
         let navTitle = document.getElementById("nav-title");
         if(navTitle != null) {
-            navTitle.replaceChildren("Auto Scaling");
+            navTitle.replaceChildren(this.pageName);
         }
         this.myConstants = new Constants();
+        this.myToasts = new Toasts();
         await this.getHPAs();
         this.hpaList_dtTrigger.next(null);
     }
@@ -201,9 +206,10 @@ export class AutoscaleComponent implements OnInit {
         try {
             let patchService = await lastValueFrom(this.k8sApisService.patchHpa(namespace, name, Number(minReplicas), Number(maxReplicas), Number(metricAvg)));
             this.hideComponent("modal-edit");
+            this.myToasts.toastSuccess(this.pageName, "", "Edited Auto Scaling: " + name);
             this.fullReload();
         } catch (e: any) {
-            alert(e.error.message);
+            this.myToasts.toastError(this.pageName, "", e.message);
             console.log(e);
         }
     }
@@ -239,9 +245,10 @@ export class AutoscaleComponent implements OnInit {
                 try {
                     let deleteService = await lastValueFrom(this.k8sApisService.deleteHPA(hpaNamespace, hpaName));
                     this.hideComponent("modal-delete");
+                    this.myToasts.toastSuccess(this.pageName, "", "Deleted Auto Scaling: " + hpaName);
                     this.fullReload();
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
                 }
             }
@@ -313,9 +320,10 @@ export class AutoscaleComponent implements OnInit {
             try {
                 let newHpaData = await lastValueFrom(this.k8sApisService.createHpa(myHpaDescriptor));
                 this.hideComponent("modal-new");
+                this.myToasts.toastSuccess(this.pageName, "", "Created Auto Scaling: " + newhpaname);
                 this.fullReload();
             } catch (e: any) {
-                alert(e.error.message);
+                this.myToasts.toastError(this.pageName, "", e.message);
                 console.log(e);
             }
         }

@@ -5,7 +5,8 @@ import { Secret } from 'src/app/interfaces/secret';
 import { SSHKey } from 'src/app/models/sshkey.model';
 import { K8sService } from 'src/app/services/k8s.service';
 import { Config } from 'datatables.net';
-import { Constants } from 'src/app/constants';
+import { Constants } from 'src/app/classes/constants';
+import { Toasts } from 'src/app/classes/toasts';
 
 @Component({
   selector: 'app-sshkeys',
@@ -14,7 +15,10 @@ import { Constants } from 'src/app/constants';
 })
 export class SSHKeysComponent implements OnInit {
 
+    pageName: string = "SSH Keys";
+
     myConstants!: Constants;
+    myToasts!: Toasts;
     keyList: SSHKey [] = [];
     namespacesList: string[] = [];
 
@@ -46,9 +50,10 @@ export class SSHKeysComponent implements OnInit {
     async ngOnInit(): Promise<void> {
         let navTitle = document.getElementById("nav-title");
         if(navTitle != null) {
-            navTitle.replaceChildren("SSH Keys");
+            navTitle.replaceChildren(this.pageName);
         }
         this.myConstants = new Constants();
+        this.myToasts = new Toasts();
         await this.getKeys();
         this.sshList_dtTrigger.next(null);
         await this.getNamespaces();
@@ -146,9 +151,10 @@ export class SSHKeysComponent implements OnInit {
             try {
                 const data = await lastValueFrom(this.k8sService.createSecret(myKey));
                 this.hideComponent("modal-new");
+                this.myToasts.toastSuccess(this.pageName, "", "Created SSH Key: " + name);
                 this.fullReload(); 
             } catch (e: any) {
-                alert(e.error.message);
+                this.myToasts.toastError(this.pageName, "", e.message);
                 console.log(e);
             }
         } else {
@@ -197,9 +203,10 @@ export class SSHKeysComponent implements OnInit {
                 try {
                     let deleteSecret = await lastValueFrom(this.k8sService.deleteSecret(keyNamespace, keyName));
                     this.hideComponent("modal-delete");
+                    this.myToasts.toastSuccess(this.pageName, "", "Deleted SSH Key: " + keyName);
                     this.fullReload();
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, "", e.message);
                     console.log(e);
                 }
             }

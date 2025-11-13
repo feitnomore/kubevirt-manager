@@ -182,7 +182,7 @@
                     <a class="nav-link active" id="newvm-home-tab" data-toggle="pill" href="#newvm-home" role="tab" aria-controls="newvm-home" aria-selected="false">Basic</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link" id="newvm-labels-tab" data-toggle="pill" href="#newvm-meta" role="tab" aria-controls="newvm-meta" aria-selected="false">Metadata</a>
+                    <a class="nav-link" id="newvm-meta-tab" data-toggle="pill" href="#newvm-meta" role="tab" aria-controls="newvm-meta" aria-selected="false">Metadata</a>
                   </li>
                   <li class="nav-item">
                     <a class="nav-link" id="newvm-cpumem-tab" data-toggle="pill" href="#newvm-cpumem" role="tab" aria-controls="newvm-cpumem" aria-selected="false">CPU/Memory</a>
@@ -194,10 +194,13 @@
                     <a class="nav-link" id="newvm-net-tab" data-toggle="pill" href="#newvm-net" role="tab" aria-controls="newvm-net" aria-selected="false">Networking</a>
                   </li>
                   <li class="nav-item">
+                    <a class="nav-link" id="newvm-cloudinit-tab" data-toggle="pill" href="#newvm-cloudinit" role="tab" aria-controls="newvm-cloudinit" aria-selected="false">Cloud-Init</a>
+                  </li>
+                  <li class="nav-item">
                     <a class="nav-link" id="newvm-userdata-tab" data-toggle="pill" href="#newvm-userdata" role="tab" aria-controls="newvm-userdata" aria-selected="false">User Data</a>
                   </li>
                   <li class="nav-item">
-                    <!-- This is hidden by default, and only shown if Network != podNetwork -->
+                    <!-- This is hidden by default, and only shown if enableCloudInit == true && Network != podNetwork -->
                     <a class="nav-link" id="newvm-netdata-tab" data-toggle="pill" href="#newvm-netdata" role="tab" aria-controls="newvm-netdata" aria-selected="false" style="display: none;">Network Data</a>
                   </li>
                   <li class="nav-item">
@@ -483,6 +486,24 @@
                         </form>
                     </div>
                   </div>
+                  <!-- CLOUD-INIT TAB -->
+                  <div class="tab-pane fade" id="newvm-cloudinit" role="tabpanel" aria-labelledby="newvm-cloudinit-tab">
+                    <div class="row">
+                      <label for="newvm-enablecloudinit">Enable cloud-init:</label>
+                      <select #newvmenablecloudinit class="custom-select rounded-0" name="newvm-enablecloudinit" id="newvm-enablecloudinit" (change)="onChangeCloudInit(newvmenablecloudinit.value)">
+                        <option value="True" selected>True</option>
+                        <option value="False">False</option>
+                      </select>
+                    </div>
+                    <div class="row">
+                      <label for="newvm-cloudinitdriver">Device Driver:</label>
+                      <select #newvmcloudinitdriver class="custom-select rounded-0" name="newvm-cloudinitdriver" id="newvm-cloudinitdriver">
+                        <option value="virtio" selected>virtio</option>
+                        <option value="sata">sata</option>
+                        <option value="scsi">scsi</option>
+                      </select>
+                    </div>
+                  </div>
                   <!-- USERDATA TAB -->
                   <div class="tab-pane fade" id="newvm-userdata" role="tabpanel" aria-labelledby="newvm-userdata-tab">
                     <label for="newvm-userdata-username">Username:</label>
@@ -534,7 +555,7 @@
           </div>
           <div class="modal-footer justify-content-between">
             <button type="button" class="btn btn-default" (click)='hideComponent("modal-newvm")'>Close</button>
-            <button type="button" class="btn btn-primary" (click)="applyNewVm(newvmname.value, newvmnamespace.value, newvmnode.value, newvmrunstrategy.value, newvmtype.value, newvmcpumemsockets.value, newvmcpumemcores.value, newvmcpumemthreads.value, newvmcpumemmemory.value, newvmpc.value, newvmfirmware.value, newvmsecureboot.value, newvmuserdatausername.value, newvmuserdataauth.value, newvmuserdatapassword.value, newvmuserdatassh.value, newvmnetdatadevice.value, newvmnetdataip.value, newvmnetdatanetmask.value, newvmnetdatagw.value, newvmnetdatadns1.value, newvmnetdatadns2.value, newvminitscript.value)">Create</button>
+            <button type="button" class="btn btn-primary" (click)="applyNewVm(newvmname.value, newvmnamespace.value, newvmnode.value, newvmrunstrategy.value, newvmenablecloudinit.value, newvmcloudinitdriver.value, newvmtype.value, newvmcpumemsockets.value, newvmcpumemcores.value, newvmcpumemthreads.value, newvmcpumemmemory.value, newvmpc.value, newvmfirmware.value, newvmsecureboot.value, newvmuserdatausername.value, newvmuserdataauth.value, newvmuserdatapassword.value, newvmuserdatassh.value, newvmnetdatadevice.value, newvmnetdataip.value, newvmnetdatanetmask.value, newvmnetdatagw.value, newvmnetdatadns1.value, newvmnetdatadns2.value, newvminitscript.value)">Create</button>
           </div>
         </div>
         </div>

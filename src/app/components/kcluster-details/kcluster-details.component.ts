@@ -19,7 +19,8 @@ import { KubeadmConfigTemplate } from 'src/app/interfaces/kubeadm-config-templat
 import { MachineDeployment } from 'src/app/interfaces/machine-deployment';
 import { DataVolume } from 'src/app/interfaces/data-volume';
 import { KubevirtMachineTemplate } from 'src/app/interfaces/kubevirt-machine-template';
-import { Constants } from 'src/app/constants';
+import { Constants } from 'src/app/classes/constants';
+import { Toasts } from 'src/app/classes/toasts';
  
 @Component({
   selector: 'app-kcluster-details',
@@ -28,7 +29,10 @@ import { Constants } from 'src/app/constants';
 })
 export class KClusterDetailsComponent implements OnInit {
 
+    pageName: string = "Kubernetes Cluster Details";
+
     myConstants!: Constants;
+    myToasts!: Toasts;
     clusterName: string = "";
     clusterNamespace: string = "";
     clusterImageList: any;
@@ -56,9 +60,10 @@ export class KClusterDetailsComponent implements OnInit {
         this.clusterNamespace = this.route.snapshot.params['namespace'];
         let navTitle = document.getElementById("nav-title");
         if(navTitle != null) {
-            navTitle.replaceChildren("Kubernetes Cluster Details");
+            navTitle.replaceChildren(this.pageName);
         }
         this.myConstants = new Constants();
+        this.myToasts = new Toasts();
         await this.loadCluster();
         await this.loadControlPlaneVMs();
         await this.loadClusterFeatures();
@@ -619,15 +624,19 @@ export class KClusterDetailsComponent implements OnInit {
     async vmOperations(vmOperation: string, vmNamespace: string, vmName: string): Promise<void> {
         if(vmOperation == "start"){
             var data = await lastValueFrom(this.kubeVirtService.startVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Started: " + vmName);
             this.reloadComponent();
         } else if (vmOperation == "stop") {
             var data = await lastValueFrom(this.kubeVirtService.stopVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Stopped: " + vmName);
             this.reloadComponent();
         } else if (vmOperation == "reboot"){
             var data = await lastValueFrom(this.kubeVirtService.restartVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Rebooted: " + vmName);
             this.reloadComponent();
         } else if (vmOperation == "delete") {
             const data = await lastValueFrom(this.kubeVirtService.deleteVm(vmNamespace, vmName));
+            this.myToasts.toastSuccess(this.pageName, "", "Deleted: " + vmName);
             this.reloadComponent();
         }
     }
@@ -674,9 +683,10 @@ export class KClusterDetailsComponent implements OnInit {
                 try {
                     const data = await lastValueFrom(this.xK8sService.scaleKubeadmControlPlane(cpNamespace, cpName, replicasSize));
                     this.hideComponent("modal-replicas-cp");
+                    this.myToasts.toastSuccess(this.pageName, "", "Edited Control Plane: " + cpName);
                     this.reloadComponent();
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, cpName, e.message);
                     console.log(e);
                 }
             } else {
@@ -969,8 +979,9 @@ export class KClusterDetailsComponent implements OnInit {
                 data = await lastValueFrom(this.xK8sService.getKubevirtMachineTemplate(kubevirtMachineTemplate.metadata.namespace, kubevirtMachineTemplate.metadata.name));
                 let cts = data.metadata["creationTimestamp"].toString();
                 data = await lastValueFrom(this.xK8sService.rolloutKubeadmControlPlane(kubevirtMachineTemplate.metadata.namespace, kubevirtMachineTemplate.metadata.name, cts));
+                this.myToasts.toastSuccess(this.pageName, "", "Edited Cluster: " + this.activeCluster.name);
             } catch (e: any) {
-                alert(e.error.message);
+                this.myToasts.toastError(this.pageName, this.activeCluster.name, e.message);
                 console.log(e);
             }
         }
@@ -1019,9 +1030,10 @@ export class KClusterDetailsComponent implements OnInit {
                     data = await lastValueFrom(this.xK8sService.deleteKubevirtMachineTemplate(wpNamespace, wpName));
                     data = await lastValueFrom(this.xK8sService.deleteMachineDeployment(wpNamespace, wpName));
                     this.hideComponent("modal-delete");
+                    this.myToasts.toastSuccess(this.pageName, "Worker Pool", "Deleted Worker Pool: " + wpName);
                     this.reloadComponent();
                 } catch (e: any) {
-                    alert(e.error.message);
+                    this.myToasts.toastError(this.pageName, this.activeCluster.name, e.message);
                     console.log(e);
                 }
             }
@@ -1320,8 +1332,8 @@ export class KClusterDetailsComponent implements OnInit {
                 data = await lastValueFrom(this.xK8sService.createKubeadmConfigTemplate(kubeadmConfigTemplate));
                 data = await lastValueFrom(this.xK8sService.createMachineDeployment(machineDeployment));
             } catch (e: any) {
+                this.myToasts.toastError(this.pageName, this.activeCluster.name, e.message);
                 console.log(e);
-                alert(e.error.message);
             }
             this.hideComponent('modal-new-wp');
             this.reloadComponent();
